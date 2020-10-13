@@ -1,21 +1,86 @@
 #pragma once
 
+#include <vector>
+
 class AstNode {
  public:
-  explicit AstNode(int line, int column) : line(line), column(column) {
-
-  }
-
   virtual ~AstNode() = default;
-
- private:
-  int line;
-  int column;
 };
 
 class Expression : public AstNode {
-  using AstNode::AstNode;
 
+};
+
+class IndexExpr : public Expression {
+ private:
+  size_t token_index_;
+  Expression* index_expr_;
+};
+
+class FuncCallExpr : public Expression {
+ private:
+  size_t funcname_token_index_; //函数名称
+  //返回值的类型
+  //参数列表，每一项应该是一个变量，每个变量具有自己的类型。
+};
+
+class BinaryExpr : public Expression {
+private:
+  Expression* left_;
+  Expression* right_;
+};
+
+class IdExpr : public Expression {
+
+};
+
+class IteralExpr : public Expression {
+
+};
+
+class Statement : public AstNode {
+
+};
+
+class BlockStmt : public Statement {
+public:
+  std::vector<Statement*> block_;
+};
+
+class ForStmt : public Statement {
  public:
-   virtual ~Expression() = default;
+  Expression* init_;
+  Expression* check_;
+  Expression* update_;
+  BlockStmt* block_;
+};
+
+class IfStmt : public Statement {
+ public:
+  Expression* check_;
+  BlockStmt* if_block_;
+  BlockStmt* else_block_;
+};
+
+class WhileStmt : public Statement {
+public:
+  Expression* check_;
+  BlockStmt* block_;
+};
+
+class BreakStmt : public Statement {
+
+};
+
+class ContinueStmt : public Statement {
+
+};
+
+class ReturnStmt : public Statement {
+
+};
+
+class ExpressionStmt : public Statement {
+ public:
+  Expression* root_;
 };

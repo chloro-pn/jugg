@@ -25,6 +25,7 @@ enum class TOKEN {
   FOR,
   BREAK,
   CONTINUE,
+  RETURN,
 
   //À¨ºÅ
   LEFT_PARENTHESIS,

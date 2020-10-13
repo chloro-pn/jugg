@@ -36,6 +36,8 @@ const char* GetTokenStr(TOKEN token) {
     return "break";
   case TOKEN::CONTINUE:
     return "continue";
+  case TOKEN::RETURN:
+    return "return";
   case TOKEN::LEFT_PARENTHESIS:
     return "(";
   case TOKEN::RIGHT_PARENTHESIS:
@@ -219,6 +221,10 @@ std::vector<Token> scan(std::string file) {
     }
     else if (std::regex_search(begin, end, result, std::regex("^continue"))) {
       tokens.push_back(CreateToken(TOKEN::CONTINUE));
+      begin = result[0].second;
+    }
+    else if (std::regex_search(begin, end, result, std::regex("^return"))) {
+      tokens.push_back(CreateToken(TOKEN::RETURN));
       begin = result[0].second;
     }
     else if (std::regex_search(begin, end, result, std::regex("^\\("))) {
