@@ -65,6 +65,7 @@ enum class TOKEN {
   FALSE,
   CHAR_ITERAL,
 
+  INVALID,
   //Ω· ¯±Í÷æ
   TEOF
 };
@@ -90,9 +91,10 @@ class Scanner {
  public:
   explicit Scanner(std::string filename);
 
-  Token getNextToken();
+  const std::vector<Token>& tokens() const {
+    return tokens_;
+  }
 
  private:
   std::vector<Token> tokens_;
-  int64_t current_index_;
 };

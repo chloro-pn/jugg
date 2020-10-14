@@ -92,9 +92,11 @@ const char* GetTokenStr(TOKEN token) {
     return "char_iteral";
   case TOKEN::ID:
     return "id";
-  default:
-    assert(token == TOKEN::TEOF);
+  case TOKEN::TEOF:
     return "teof";
+  default:
+    assert(token == TOKEN::INVALID);
+    return "invalid";
   }
 }
 
@@ -361,14 +363,6 @@ Scanner::Scanner(std::string filename) {
   tokens_ = scan(str);
 }
 
-Token Scanner::getNextToken() {
-  assert(tokens_.size() > current_index_);
-  ++current_index_;
-  if (tokens_.size() == current_index_) {
-    return CreateToken(TOKEN::TEOF);
-  }
-  return tokens_[current_index_];
-}
 void TokenPrint(const std::vector<Token>& tokens) {
   size_t index = 0;
   for (auto it = tokens.begin(); it != tokens.end(); ++it) {

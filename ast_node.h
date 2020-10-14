@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "scanner.h"
 
 class AstNode {
  public:
@@ -25,13 +26,15 @@ class FuncCallExpr : public Expression {
 };
 
 class BinaryExpr : public Expression {
-private:
+ public:
   Expression* left_;
   Expression* right_;
+  TOKEN operator_token_;
 };
 
 class IdExpr : public Expression {
-
+public:
+  size_t token_index_;
 };
 
 class IteralExpr : public Expression {
