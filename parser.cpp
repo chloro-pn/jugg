@@ -36,12 +36,13 @@ size_t FindNextSemicolon(const std::vector<Token>& tokens, size_t begin) {
   return -1;
 }
 
+//level值越大，优先级越低
 static int CompareOperatorLevel(TOKEN t1, TOKEN t2) {
   if (OperatorSet::instance().GetLevel(t1) > OperatorSet::instance().GetLevel(t2)) {
-    return 1;
+    return -1;
   }
   else if (OperatorSet::instance().GetLevel(t1) < OperatorSet::instance().GetLevel(t2)) {
-    return -1;
+    return 1;
   }
   return 0;
 }
@@ -86,7 +87,6 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         binexpr->left_ = operands.top();
         operands.pop();
         operands.push(binexpr);
-        operators.push(current_token);
       }
       operators.push(current_token);
     }

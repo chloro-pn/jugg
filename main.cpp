@@ -3,12 +3,10 @@
 #include "parser.h"
 
 int main() {
-  auto tokens = scan("{str < tme;"
-                     ";"
-                     "a+b == c;"
-                     "2.163;}");
+  auto tokens = scan("while(i > 3) { i = i + 1;}");
   TokenPrint(tokens);
-  ParseBlockStmt(tokens, 0, tokens.size() - 1);
+  size_t next = 0;
+  ParseStatement(tokens, 0, next);
   system("pause");
   return 0;
 }
