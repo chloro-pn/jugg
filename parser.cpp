@@ -215,3 +215,66 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     return result;
   }
 }
+
+std::vector<std::pair<size_t, size_t>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
+  assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
+  std::vector<std::pair<size_t, size_t>> result;
+  size_t index = begin;
+  while (true) {
+    if (index == end) {
+      break;
+    }
+    result.push_back({ index, index + 1 });
+    index += 2;
+    assert(tokens[index].token == TOKEN::COMMA);
+    ++index;
+    assert(index <= end);
+  }
+  return result;
+}
+
+Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
+  Func result;
+  assert(tokens[begin].token == TOKEN::FUNC);
+  ++begin;
+  //函数名称
+  result.func_name_index_ = begin;
+  ++begin;
+  assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
+  size_t match_parent = FindMatchedParenthesis(tokens, begin);
+  ++begin;
+
+  result.parameter_type_index_list_ = ParseParameterList(tokens, begin, match_parent);
+  begin = match_parent + 1;
+  //函数返回值类型的token
+  result.return_type_index_ = begin;
+  ++begin;
+  assert(tokens[begin].token == TOKEN::LEFT_BRACE);
+  size_t match_brace = FindMatchedBrace(tokens, begin);
+  //函数体
+  result.block_ = ParseBlockStmt(tokens, begin, match_brace);
+  end = match_brace + 1;
+  return result;
+}
+
+void Parse(const std::vector<Token>& tokens) {
+  size_t index = 0;
+  while (true) {
+    TOKEN current_token = tokens[index].token;
+    if (current_token == TOKEN::TEOF) {
+      break;
+    }
+    if (current_token == TOKEN::FUNC) {
+      size_t next = 0;
+      ParseFunc(tokens, index, next);
+      index = next;
+    }
+    else if (current_token == TOKEN::TYPE) {
+      size_t next = 0;
+      //ParseType(tokens, index, next);
+    }
+    else {
+      ;//TODO, 全局变量定义
+    }
+  }
+}

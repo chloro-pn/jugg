@@ -19,10 +19,9 @@ class IndexExpr : public Expression {
 };
 
 class FuncCallExpr : public Expression {
- private:
-  size_t funcname_token_index_; //函数名称
-  //返回值的类型
-  //参数列表，每一项应该是一个变量，每个变量具有自己的类型。
+ public:
+  size_t func_name_index_;
+  std::vector<TOKEN> parameters_;
 };
 
 class BinaryExpr : public Expression {
@@ -33,7 +32,7 @@ class BinaryExpr : public Expression {
 };
 
 class IdExpr : public Expression {
-public:
+ public:
   size_t token_index_;
 };
 
@@ -46,7 +45,7 @@ class Statement : public AstNode {
 };
 
 class BlockStmt : public Statement {
-public:
+ public:
   std::vector<Statement*> block_;
 };
 
@@ -66,7 +65,7 @@ class IfStmt : public Statement {
 };
 
 class WhileStmt : public Statement {
-public:
+ public:
   Expression* check_;
   BlockStmt* block_;
 };

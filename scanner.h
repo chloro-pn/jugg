@@ -44,6 +44,9 @@ enum class TOKEN {
   //小数点
   DECIMAL_POINT,
 
+  //逗号
+  COMMA,
+
   //运算符号
   PLUS,
   MINUS,
@@ -64,6 +67,11 @@ enum class TOKEN {
   TRUE,
   FALSE,
   CHAR_ITERAL,
+
+  //函数
+  FUNC,
+  //类型
+  TYPE,
 
   INVALID,
   //结束标志

@@ -56,6 +56,8 @@ const char* GetTokenStr(TOKEN token) {
     return ":";
   case TOKEN::DECIMAL_POINT:
     return ".";
+  case TOKEN::COMMA:
+    return ",";
   case TOKEN::PLUS:
     return "+";
   case TOKEN::MINUS:
@@ -90,6 +92,10 @@ const char* GetTokenStr(TOKEN token) {
     return "double_iteral";
   case TOKEN::CHAR_ITERAL:
     return "char_iteral";
+  case TOKEN::FUNC:
+    return "func";
+  case TOKEN::TYPE:
+    return "type";
   case TOKEN::ID:
     return "id";
   case TOKEN::TEOF:
@@ -178,142 +184,146 @@ std::vector<Token> scan(std::string file) {
   auto end = file.cend();
   while (true) {
     std::smatch result;
-    if (std::regex_search(begin, end, result, std::regex("^[ \\r\\n\\t]"))) {
+    if (std::regex_search(begin, end, result, std::regex("[ \\r\\n\\t]"), std::regex_constants::match_continuous)) {
       ++begin;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^int"))) {
+    else if (std::regex_search(begin, end, result, std::regex("int"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::INT));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^double"))) {
+    else if (std::regex_search(begin, end, result, std::regex("double"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::DOUBLE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^char"))) {
+    else if (std::regex_search(begin, end, result, std::regex("char"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::CHAR));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^bool"))) {
+    else if (std::regex_search(begin, end, result, std::regex("bool"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::BOOL));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^string"))) {
+    else if (std::regex_search(begin, end, result, std::regex("string"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::STRING));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^if"))) {
+    else if (std::regex_search(begin, end, result, std::regex("if"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::IF));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^else"))) {
+    else if (std::regex_search(begin, end, result, std::regex("else"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::ELSE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^for"))) {
+    else if (std::regex_search(begin, end, result, std::regex("for"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::FOR));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^while"))) {
+    else if (std::regex_search(begin, end, result, std::regex("while"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::WHILE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^break"))) {
+    else if (std::regex_search(begin, end, result, std::regex("break"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::BREAK));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^continue"))) {
+    else if (std::regex_search(begin, end, result, std::regex("continue"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::CONTINUE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^return"))) {
+    else if (std::regex_search(begin, end, result, std::regex("return"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::RETURN));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\("))) {
+    else if (std::regex_search(begin, end, result, std::regex("\\("), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::LEFT_PARENTHESIS));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\)"))) {
+    else if (std::regex_search(begin, end, result, std::regex("\\)"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::RIGHT_PARENTHESIS));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\["))) {
+    else if (std::regex_search(begin, end, result, std::regex("\\["), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::LEFT_BRACKETS));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\]"))) {
+    else if (std::regex_search(begin, end, result, std::regex("\\]"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::RIGHT_BRACKETS));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\{"))) {
+    else if (std::regex_search(begin, end, result, std::regex("\\{"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::LEFT_BRACE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\}"))) {
+    else if (std::regex_search(begin, end, result, std::regex("\\}"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::RIGHT_BRACE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^;"))) {
+    else if (std::regex_search(begin, end, result, std::regex(";"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::SEMICOLON));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^:"))) {
+    else if (std::regex_search(begin, end, result, std::regex(":"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::COLON));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\."))) {
+    else if (std::regex_search(begin, end, result, std::regex("\\."), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::DECIMAL_POINT));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\+"))) {
+    else if (std::regex_search(begin, end, result, std::regex(","), std::regex_constants::match_continuous)) {
+      tokens.push_back(CreateToken(TOKEN::COMMA));
+      begin = result[0].second;
+    }
+    else if (std::regex_search(begin, end, result, std::regex("\\+"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::PLUS));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^-"))) {
+    else if (std::regex_search(begin, end, result, std::regex("-"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::MINUS));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\*"))) {
+    else if (std::regex_search(begin, end, result, std::regex("\\*"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::MULTIPLY));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^/"))) {
+    else if (std::regex_search(begin, end, result, std::regex("/"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::DIVIDE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^&"))) {
+    else if (std::regex_search(begin, end, result, std::regex("&"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::AND));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\\|"))) {
+    else if (std::regex_search(begin, end, result, std::regex("\\|"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::OR));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^~"))) {
+    else if (std::regex_search(begin, end, result, std::regex("~"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::IF));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^=="))) {
+    else if (std::regex_search(begin, end, result, std::regex("=="), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::COMPARE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^="))) {
+    else if (std::regex_search(begin, end, result, std::regex("="), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::ASSIGN));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^>"))) {
+    else if (std::regex_search(begin, end, result, std::regex(">"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::GREATER_THAN));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^<"))) {
+    else if (std::regex_search(begin, end, result, std::regex("<"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::LESS_THAN));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\".*?\""))) {
+    else if (std::regex_search(begin, end, result, std::regex("\".*?\""), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::STRING_ITERAL, result[0].str()));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^[-+]?(0|[1-9][0-9]*)\\.[0-9]*"))) {
+    else if (std::regex_search(begin, end, result, std::regex("[-+]?(0|[1-9][0-9]*)\\.[0-9]*"), std::regex_constants::match_continuous)) {
       double num;
       std::stringstream stream;
       stream << result[0].str();
@@ -321,7 +331,7 @@ std::vector<Token> scan(std::string file) {
       tokens.push_back(CreateToken(TOKEN::DOUBLE_ITERAL, num));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^[-+]?(0|[1-9][0-9]*)"))) {
+    else if (std::regex_search(begin, end, result, std::regex("[-+]?(0|[1-9][0-9]*)"), std::regex_constants::match_continuous)) {
       int64_t num;
       std::stringstream stream;
       stream << result[0].str();
@@ -329,19 +339,27 @@ std::vector<Token> scan(std::string file) {
       tokens.push_back(CreateToken(TOKEN::INT_ITERAL, num));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^true"))) {
+    else if (std::regex_search(begin, end, result, std::regex("true"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::TRUE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^false"))) {
+    else if (std::regex_search(begin, end, result, std::regex("false"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::FALSE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^\'.\'"))) {
+    else if (std::regex_search(begin, end, result, std::regex("\'.\'"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::CHAR_ITERAL, result[0].str()[0]));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("^[a-zA-Z_][a-zA-Z0-9_]*"))) {
+    else if (std::regex_search(begin, end, result, std::regex("func"), std::regex_constants::match_continuous)) {
+      tokens.push_back(CreateToken(TOKEN::FUNC));
+      begin = result[0].second;
+    }
+    else if (std::regex_search(begin, end, result, std::regex("type"), std::regex_constants::match_continuous)) {
+      tokens.push_back(CreateToken(TOKEN::TYPE));
+      begin = result[0].second;
+    }
+    else if (std::regex_search(begin, end, result, std::regex("[a-zA-Z_][a-zA-Z0-9_]*"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::ID, result[0].str()));
       begin = result[0].second;
     }
@@ -355,12 +373,14 @@ std::vector<Token> scan(std::string file) {
   return tokens;
 }
 
+//Scanner负责在TOKEN流最后补充teof的token。
 Scanner::Scanner(std::string filename) {
   std::ifstream in(filename.c_str());
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string str(buffer.str());
   tokens_ = scan(str);
+  tokens_.push_back(CreateToken(TOKEN::TEOF));
 }
 
 void TokenPrint(const std::vector<Token>& tokens) {
