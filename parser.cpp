@@ -48,8 +48,7 @@ static int CompareOperatorLevel(TOKEN t1, TOKEN t2) {
 }
 
 // end是表达式最后一个token的下一个token索引值。
-// TODO : 处理函数调用表达式和索引表达式, 变量定义表达式
-// 解析函数定义文法
+// TODO : 处理函数调用表达式和下标访问表达式，成员访问表达式。
 Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size_t end) {
   if (begin == end) {
     return nullptr; // 可能是空语句
@@ -205,8 +204,13 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     end = begin + 1;
     return new BreakStmt;
   }
+  else if (tokens[begin].token == TOKEN::ID && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true) {
+    //变量定义语句
+    Variable v = ParseVariableDefinition(tokens, begin, end);
+    //TODO 结合块， 作用域结构，向对应作用域结构中注册变量v。
+  }
   else {
-    // 表达式语句.
+    // 表达式语句, 函数调用语句是表达式语句的一种。
     ExpressionStmt* tmp = new ExpressionStmt();
     end = FindNextSemicolon(tokens, begin);
     tmp->root_ = ParseExpression(tokens, begin, end);
@@ -216,15 +220,17 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
   }
 }
 
-std::vector<std::pair<size_t, size_t>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
+std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
-  std::vector<std::pair<size_t, size_t>> result;
+  std::vector<std::pair<std::string, std::string>> result;
   size_t index = begin;
   while (true) {
     if (index == end) {
       break;
     }
-    result.push_back({ index, index + 1 });
+    assert(tokens[begin].token == TOKEN::ID && tokens[index].type == Token::TYPE::STRING);
+    assert(tokens[begin].token == TOKEN::ID && tokens[index + 1].type == Token::TYPE::STRING);
+    result.push_back({ tokens[index].get<std::string>(), tokens[index + 1].get<std::string>() });
     index += 2;
     assert(tokens[index].token == TOKEN::COMMA);
     ++index;
@@ -233,26 +239,46 @@ std::vector<std::pair<size_t, size_t>> ParseParameterList(const std::vector<Toke
   return result;
 }
 
+// 根据位置来确定一个id-TOKEN是类型名称、函数名称还是变量名称.
+// 当一个TOKEN是类型名称或函数名称时，通过在编译程序中寻找，确定具体的类型、函数。
+// 当一个TOKEN是变量名称时，通过作用域系统的支撑定位变量位置。
 Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   Func result;
   assert(tokens[begin].token == TOKEN::FUNC);
   ++begin;
   //函数名称
-  result.func_name_index_ = begin;
+  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
+  result.func_name_ = tokens[begin].get<std::string>();
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   size_t match_parent = FindMatchedParenthesis(tokens, begin);
   ++begin;
 
-  result.parameter_type_index_list_ = ParseParameterList(tokens, begin, match_parent);
+  result.parameter_type_list_ = ParseParameterList(tokens, begin, match_parent);
   begin = match_parent + 1;
   //函数返回值类型的token
-  result.return_type_index_ = begin;
+  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
+  result.return_type_ = tokens[begin].get<std::string>();
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
   //函数体
   result.block_ = ParseBlockStmt(tokens, begin, match_brace);
+  end = match_brace + 1;
+  return result;
+}
+
+Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
+  Type result;
+  assert(tokens[begin].token == TOKEN::TYPE);
+  ++begin;
+  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
+  result.type_name_ = tokens[begin].get<std::string>();
+  ++begin;
+  assert(tokens[begin].token == TOKEN::LEFT_BRACE);
+  size_t match_brace = FindMatchedParenthesis(tokens, begin);
+
+  //TODO parse type-block.
   end = match_brace + 1;
   return result;
 }
@@ -266,15 +292,23 @@ void Parse(const std::vector<Token>& tokens) {
     }
     if (current_token == TOKEN::FUNC) {
       size_t next = 0;
-      ParseFunc(tokens, index, next);
+      Func func = ParseFunc(tokens, index, next);
       index = next;
+      assert(FuncSet::instance().Find(func.func_name_) == false);
+      FuncSet::instance().Set(func.func_name_, func);
     }
     else if (current_token == TOKEN::TYPE) {
       size_t next = 0;
-      //ParseType(tokens, index, next);
+      Type type = ParseType(tokens, index, next);
+      index = next;
+      assert(TypeSet::instance().Find(type.type_name_) == false);
+      TypeSet::instance().Set(type.type_name_, type);
     }
     else {
-      ;//TODO, 全局变量定义
+      size_t next = 0;
+      Variable v = ParseVariableDefinition(tokens, index, next);
+      index = next;
+      //TODO 全局的变量记录结构注册变量v。
     }
   }
 }

@@ -3,6 +3,8 @@
 #include "scanner.h"
 #include "operator.h"
 #include "func.h"
+#include "type.h"
+#include "variable.h"
 #include <vector>
 #include <cassert>
 #include <stack>
@@ -22,9 +24,13 @@ BlockStmt* ParseBlockStmt(const std::vector<Token>& tokens, size_t begin, size_t
 // 解析从begin处开始的一条语句，返回该语句对应的对象指针，并将end修改为该语句最后一个token的下一个token索引值。
 Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t& end);
 
-std::vector<std::pair<size_t, size_t>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end);
+std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end);
 
 Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end);
+
+Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end);
+
+Variable ParseVariableDefinition(const std::vector<Token>& token, size_t begin, size_t& end);
 
 //TODO
 //void ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end);

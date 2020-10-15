@@ -86,6 +86,11 @@ struct Token {
   TYPE type;
   std::any attr;
 
+  template<typename T>
+  T get() const {
+    return std::any_cast<T>(attr);
+  }
+
   Token() = default;
 
   Token(const Token& other) = default;
