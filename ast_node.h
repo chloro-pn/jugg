@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 #include "scanner.h"
 
 class AstNode {
@@ -20,8 +21,8 @@ class IndexExpr : public Expression {
 
 class FuncCallExpr : public Expression {
  public:
-  size_t func_name_index_;
-  std::vector<TOKEN> parameters_;
+  std::string func_name_;
+  std::vector<Expression*> parameters_;
 };
 
 class BinaryExpr : public Expression {

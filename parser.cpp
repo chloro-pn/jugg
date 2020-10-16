@@ -1,4 +1,6 @@
 #include "parser.h"
+#include "func.h"
+#include <cassert>
 
 #define FindMatch(FuncName, x, y) \
 size_t FuncName(const std::vector<Token>& tokens, size_t begin) { \
@@ -36,6 +38,17 @@ size_t FindNextSemicolon(const std::vector<Token>& tokens, size_t begin) {
   return -1;
 }
 
+size_t FindNextCommaOrRightParenthesis(const std::vector<Token>& tokens, size_t begin) {
+  size_t index = begin;
+  while (index < tokens.size()) {
+    if (tokens[index].token == TOKEN::COMMA || tokens[index].token == TOKEN::RIGHT_PARENTHESIS) {
+      return index;
+    }
+    ++index;
+  }
+  return -1;
+}
+
 //level值越大，优先级越低
 static int CompareOperatorLevel(TOKEN t1, TOKEN t2) {
   if (OperatorSet::instance().GetLevel(t1) > OperatorSet::instance().GetLevel(t2)) {
@@ -45,6 +58,31 @@ static int CompareOperatorLevel(TOKEN t1, TOKEN t2) {
     return 1;
   }
   return 0;
+}
+
+FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, size_t end) {
+  FuncCallExpr* result = new FuncCallExpr;
+  assert(tokens[begin].token == TOKEN::ID);
+  assert(tokens[begin].type == Token::TYPE::STRING);
+  result->func_name_ = tokens[begin].get<std::string>();
+  //确保当前函数可以被找到，即已经在前面解析过程中被定义。
+  assert(FuncSet::instance().Find(result->func_name_) == true);
+  ++begin;
+  assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
+  assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
+  while (true) {
+    if (tokens[begin].token == TOKEN::RIGHT_PARENTHESIS) {
+      break;
+    }
+    ++begin;
+    size_t next = FindNextCommaOrRightParenthesis(tokens, begin);
+    // func_name(xxxxx, xxxxx, xxxx)
+    //           |    |
+    //         begin end
+    result->parameters_.push_back(ParseExpression(tokens, begin, next));
+    begin = next;
+  }
+  return result;
 }
 
 // end是表达式最后一个token的下一个token索引值。
@@ -60,8 +98,20 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
     //左括号特殊处理，因为其改变了运算优先级
     if (current_token == TOKEN::LEFT_PARENTHESIS) {
       size_t match_parent = FindMatchedParenthesis(tokens, i);
-      //递归求解括号中的表达式
-      operands.push(ParseExpression(tokens, i, match_parent));
+      //如果左括号不是表达式的第一个TOKEN并且其前面的TOKEN不是运算符，则应该是函数调用表达式。
+      if (i > begin && OperatorSet::instance().find(tokens[i - 1].token) == false) {
+        assert(operands.empty() == false);
+        Expression* func_name = operands.top();
+        operands.pop();
+        //这里需要确认func_name表达式是IdExpr。
+        assert(tokens[i - 1].type == Token::TYPE::STRING);
+        assert(tokens[i - 1].token == TOKEN::ID);
+        operands.push(ParseFuncCallExpr(tokens, i - 1, match_parent));
+      }
+      else {
+        //递归求解括号中的表达式
+        operands.push(ParseExpression(tokens, i, match_parent));
+      }
       i = match_parent;
       continue;
     }
@@ -206,7 +256,7 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
   }
   else if (tokens[begin].token == TOKEN::ID && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true) {
     //变量定义语句
-    Variable v = ParseVariableDefinition(tokens, begin, end);
+    //Variable v = ParseVariableDefinition(tokens, begin, end);
     //TODO 结合块， 作用域结构，向对应作用域结构中注册变量v。
   }
   else {
@@ -256,8 +306,8 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 
   result.parameter_type_list_ = ParseParameterList(tokens, begin, match_parent);
   begin = match_parent + 1;
-  //函数返回值类型的token
-  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
+  //函数返回值的类型在类型系统中可以找到。
+  assert(tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
   result.return_type_ = tokens[begin].get<std::string>();
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
@@ -306,7 +356,7 @@ void Parse(const std::vector<Token>& tokens) {
     }
     else {
       size_t next = 0;
-      Variable v = ParseVariableDefinition(tokens, index, next);
+      //Variable v = ParseVariableDefinition(tokens, index, next);
       index = next;
       //TODO 全局的变量记录结构注册变量v。
     }

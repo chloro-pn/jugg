@@ -15,8 +15,13 @@ size_t FindMatchedBrace(const std::vector<Token>& tokens, size_t begin);
 
 size_t FindNextSemicolon(const std::vector<Token>& tokens, size_t begin);
 
+size_t FindNextComma(const std::vector<Token>& tokens, size_t begin);
+
+//函数调用表达式的解析, begin是函数名字，end是右括号。
+FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, size_t end);
+
 // end是表达式最后一个token的下一个token索引值。
-// 目前没有处理函数调用表达式和索引表达式.
+// 目前没有处理索引表达式.
 Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size_t end);
 
 BlockStmt* ParseBlockStmt(const std::vector<Token>& tokens, size_t begin, size_t end);
@@ -30,7 +35,7 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end);
 
 Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end);
 
-Variable ParseVariableDefinition(const std::vector<Token>& token, size_t begin, size_t& end);
+//Variable ParseVariableDefinition(const std::vector<Token>& token, size_t begin, size_t& end);
 
 //TODO
 //void ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end);

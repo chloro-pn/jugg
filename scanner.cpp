@@ -27,6 +27,8 @@ const char* GetTokenStr(TOKEN token) {
     return "bool";
   case TOKEN::CHAR:
     return "char";
+  case TOKEN::VOID:
+    return "void";
   case TOKEN::IF:
     return "if";
   case TOKEN::WHILE:
@@ -244,15 +246,15 @@ std::vector<Token> scan(std::string file) {
       tokens.push_back(CreateToken(TOKEN::DIVIDE));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("&"), std::regex_constants::match_continuous)) {
+    else if (std::regex_search(begin, end, result, std::regex("&&"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::AND));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("\\|"), std::regex_constants::match_continuous)) {
+    else if (std::regex_search(begin, end, result, std::regex("\\|\\|"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::OR));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("~"), std::regex_constants::match_continuous)) {
+    else if (std::regex_search(begin, end, result, std::regex("!"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::IF));
       begin = result[0].second;
     }
@@ -298,7 +300,7 @@ std::vector<Token> scan(std::string file) {
     }
     else if (std::regex_search(begin, end, result, std::regex("[a-zA-Z_][a-zA-Z0-9_]*"), std::regex_constants::match_continuous)) {
       if (KeyWords::instance().find(result[0]) == true) {
-        tokens.push_back(CreateToken(KeyWords::instance().get(result[0].str())));
+        tokens.push_back(CreateToken(KeyWords::instance().get(result[0].str()), result[0].str()));
       }
       else {
         tokens.push_back(CreateToken(TOKEN::ID, result[0].str()));

@@ -17,6 +17,7 @@ enum class TOKEN {
   CHAR, //char
   STRING, //×Ö·û´®
   BOOL, //bool
+  VOID,
 
   //Á÷³Ì¿ØÖÆÓï¾ä
   IF,

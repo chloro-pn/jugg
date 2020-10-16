@@ -6,6 +6,9 @@
 class Type {
  public:
   std::string type_name_;
+  explicit Type(const std::string& str = "") : type_name_(str) {
+
+  }
 };
 
 class TypeSet {
