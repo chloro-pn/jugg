@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "func.h"
+#include "scope.h"
 #include <cassert>
 
 #define FindMatch(FuncName, x, y) \
@@ -186,14 +187,21 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     begin = match_parent + 1;
     assert(tokens[begin].token == TOKEN::LEFT_BRACE);
     size_t match_brace = FindMatchedBrace(tokens, begin);
+
+    Scopes::instance().EnterNewScope(Scope::TYPE::BLOCK);
     tmp->if_block_ = ParseBlockStmt(tokens, begin, match_brace);
+    Scopes::instance().LeaveScope();
 
     begin = match_brace + 1;
     if (tokens[begin].token == TOKEN::ELSE) {
       ++begin;
       assert(tokens[begin].token == TOKEN::LEFT_BRACE);
       end = FindMatchedBrace(tokens, begin);
+
+      Scopes::instance().EnterNewScope(Scope::TYPE::BLOCK);
       tmp->else_block_ = ParseBlockStmt(tokens, begin, end);
+      Scopes::instance().LeaveScope();
+
       ++end;
     }
     else {
@@ -213,7 +221,11 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     begin = match_parent + 1;
     assert(tokens[begin].token == TOKEN::LEFT_BRACE);
     size_t match_brace = FindMatchedBrace(tokens, begin);
+
+    Scopes::instance().EnterNewScope(Scope::TYPE::BLOCK);
     tmp->block_ = ParseBlockStmt(tokens, begin, match_brace);
+    Scopes::instance().LeaveScope();
+
     result = tmp;
     end = match_brace + 1;
     return result;
@@ -237,7 +249,11 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     begin = match_parent + 1;
     assert(tokens[begin].token == TOKEN::LEFT_BRACE);
     size_t match_brace = FindMatchedBrace(tokens, begin);
+
+    Scopes::instance().EnterNewScope(Scope::TYPE::BLOCK);
     tmp->block_ = ParseBlockStmt(tokens, begin, match_brace);
+    Scopes::instance().LeaveScope();
+
     result = tmp;
     end = match_brace + 1;
     return result;
@@ -293,6 +309,7 @@ std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::v
 // 当一个TOKEN是类型名称或函数名称时，通过在编译程序中寻找，确定具体的类型、函数。
 // 当一个TOKEN是变量名称时，通过作用域系统的支撑定位变量位置。
 Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
+  Scopes::instance().EnterNewScope(Scope::TYPE::FUNC);
   Func result;
   assert(tokens[begin].token == TOKEN::FUNC);
   ++begin;
@@ -315,10 +332,12 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   //函数体
   result.block_ = ParseBlockStmt(tokens, begin, match_brace);
   end = match_brace + 1;
+  Scopes::instance().LeaveScope();
   return result;
 }
 
 Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
+  Scopes::instance().EnterNewScope(Scope::TYPE::TYPE);
   Type result;
   assert(tokens[begin].token == TOKEN::TYPE);
   ++begin;
@@ -330,6 +349,7 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 
   //TODO parse type-block.
   end = match_brace + 1;
+  Scopes::instance().LeaveScope();
   return result;
 }
 
