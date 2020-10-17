@@ -1,11 +1,17 @@
 #pragma once
 #include <string>
 #include <unordered_map>
+#include <vector>
+#include "func.h"
 
 //TODO
 class Type {
  public:
   std::string type_name_;
+  // std::pair<type_name, variable_name>.
+  std::vector<std::pair<std::string, std::string>> data_members_;
+  std::vector<Func> methods_;
+
   explicit Type(const std::string& str = "") : type_name_(str) {
 
   }
