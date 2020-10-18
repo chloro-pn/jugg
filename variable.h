@@ -6,10 +6,14 @@
 class Variable {
  public:
   std::string variable_name_;
-  Type* type_;
+  std::string type_name_;
+
+  virtual ~Variable() {
+
+  }
 };
 
-class AbstraceVariable : public Variable {
+class AbstractVariable : public Variable {
  public:
   std::vector<Variable*> data_members_;
 };

@@ -2,6 +2,7 @@
 #include "func.h"
 #include "scope.h"
 #include <cassert>
+#include <algorithm>
 
 #define FindMatch(FuncName, x, y) \
 size_t FuncName(const std::vector<Token>& tokens, size_t begin) { \
@@ -336,6 +337,14 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   return result;
 }
 
+// type定义：
+// type type_name {
+//   int age;
+//   string name;
+//   func GetName() string {
+//     return name;
+//   }
+// }
 Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   Scopes::instance().EnterNewScope(Scope::TYPE::TYPE);
   Type result;
@@ -347,10 +356,44 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedParenthesis(tokens, begin);
 
-  //TODO parse type-block.
-  end = match_brace + 1;
+  end = match_brace;
+  ++begin;
+  while (true) {
+    if (begin == end) {
+      break;
+    }
+    if (tokens[begin].token == TOKEN::FUNC) {
+      size_t next = 0;
+      Func func = ParseFunc(tokens, begin, next);
+      assert(result.FindMethod(func.func_name_) == false);
+      result.methods_[func.func_name_] = func;
+      begin = next;
+    }
+    else {
+      assert(tokens[begin].type == Token::TYPE::STRING);
+      assert(TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
+      std::string type_name = tokens[begin].get<std::string>();
+      ++begin;
+      assert(tokens[begin].type == Token::TYPE::STRING);
+      std::string var_name = tokens[begin].get<std::string>();
+      assert(result.FindData(var_name) == false);
+      result.datas_[var_name] = type_name;
+      ++begin;
+      assert(tokens[begin].token == TOKEN::SEMICOLON);
+      ++begin;
+    }
+  }
+  ++end;
   Scopes::instance().LeaveScope();
   return result;
+}
+
+// TODO:
+// 变量定义语法:
+// type_name var(expr, expr, expr, ...);
+// 检查是否与变量数据成员的类型匹配。
+Variable* ParseVariableDefinition(const std::vector<Token>& token, size_t begin, size_t& end) {
+  return nullptr;
 }
 
 void Parse(const std::vector<Token>& tokens) {
@@ -376,9 +419,11 @@ void Parse(const std::vector<Token>& tokens) {
     }
     else {
       size_t next = 0;
-      //Variable v = ParseVariableDefinition(tokens, index, next);
+      Variable* v = ParseVariableDefinition(tokens, index, next);
+      assert(Scopes::instance().GetCurrentScope().index_ == 0);
+      assert(Scopes::instance().GetCurrentScope().Find(v->variable_name_) == false);
+      Scopes::instance().GetCurrentScope().vars_[v->variable_name_] = v;
       index = next;
-      //TODO 全局的变量记录结构注册变量v。
     }
   }
 }

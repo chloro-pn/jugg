@@ -8,12 +8,20 @@
 class Type {
  public:
   std::string type_name_;
-  // std::pair<type_name, variable_name>.
-  std::vector<std::pair<std::string, std::string>> data_members_;
-  std::vector<Func> methods_;
+  // {var_name, type_name}
+  std::unordered_map<std::string, std::string> datas_;
+  std::unordered_map<std::string, Func> methods_;
 
   explicit Type(const std::string& str = "") : type_name_(str) {
 
+  }
+
+  bool FindData(const std::string& name) const {
+    return datas_.find(name) != datas_.end();
+  }
+
+  bool FindMethod(const std::string& name) const {
+    return methods_.find(name) != methods_.end();
   }
 };
 
