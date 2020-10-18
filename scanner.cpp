@@ -190,6 +190,9 @@ std::vector<Token> scan(std::string file) {
     if (std::regex_search(begin, end, result, std::regex("[ \\r\\n\\t]"), std::regex_constants::match_continuous)) {
       ++begin;
     }
+    else if (std::regex_search(begin, end, result, std::regex("//.*?\\n"), std::regex_constants::match_continuous)) {
+      begin = result[0].second;
+    }
     else if (std::regex_search(begin, end, result, std::regex("\\("), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::LEFT_PARENTHESIS));
       begin = result[0].second;

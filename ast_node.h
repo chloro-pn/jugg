@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include "scanner.h"
+#include "variable.h"
 
 class AstNode {
  public:
@@ -79,11 +80,19 @@ class ContinueStmt : public Statement {
 
 };
 
+//如果return_var_ == nullptr，则为空语句。
 class ReturnStmt : public Statement {
-
+ public:
+  Expression* return_var_;
 };
 
 class ExpressionStmt : public Statement {
  public:
   Expression* root_;
+};
+
+class VariableDefineStmt : public Statement {
+ public:
+  Variable* var_;
+  std::vector<Expression*> constructors_;
 };

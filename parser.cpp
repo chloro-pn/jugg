@@ -73,7 +73,7 @@ FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, 
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
   while (true) {
-    if (tokens[begin].token == TOKEN::RIGHT_PARENTHESIS) {
+    if (begin == end) {
       break;
     }
     ++begin;
@@ -260,21 +260,38 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     return result;
   }
   else if (tokens[begin].token == TOKEN::RETURN) {
-    end = begin + 1;
-    return new ReturnStmt;
+    ReturnStmt* result = new ReturnStmt;
+    ++begin;
+    if (tokens[begin].token != TOKEN::SEMICOLON) {
+      size_t next = FindNextSemicolon(tokens, begin);
+      result->return_var_ = ParseExpression(tokens, begin, next);
+      end = next + 1;
+    }
+    else {
+      result->return_var_ = nullptr;
+      end = begin + 1;
+    }
+    return result;
   }
   else if (tokens[begin].token == TOKEN::CONTINUE) {
+    ++begin;
+    assert(tokens[begin].token == TOKEN::SEMICOLON);
     end = begin + 1;
     return new ContinueStmt;
   }
   else if (tokens[begin].token == TOKEN::BREAK) {
+    ++begin;
+    assert(tokens[begin].token == TOKEN::SEMICOLON);
     end = begin + 1;
     return new BreakStmt;
   }
   else if (tokens[begin].token == TOKEN::ID && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true) {
     //变量定义语句
-    //Variable v = ParseVariableDefinition(tokens, begin, end);
+    VariableDefineStmt* v = ParseVariableDefinition(tokens, begin, end);
     //TODO 结合块， 作用域结构，向对应作用域结构中注册变量v。
+    assert(Scopes::instance().GetCurrentScope().Find(v->var_->variable_name_) == false);
+    Scopes::instance().GetCurrentScope().vars_[v->var_->variable_name_] = v->var_;
+    return v;
   }
   else {
     // 表达式语句, 函数调用语句是表达式语句的一种。
@@ -354,7 +371,7 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   result.type_name_ = tokens[begin].get<std::string>();
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
-  size_t match_brace = FindMatchedParenthesis(tokens, begin);
+  size_t match_brace = FindMatchedBrace(tokens, begin);
 
   end = match_brace;
   ++begin;
@@ -392,8 +409,36 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 // 变量定义语法:
 // type_name var(expr, expr, expr, ...);
 // 检查是否与变量数据成员的类型匹配。
-Variable* ParseVariableDefinition(const std::vector<Token>& token, size_t begin, size_t& end) {
-  return nullptr;
+VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, size_t begin, size_t& end) {
+  VariableDefineStmt* result = new VariableDefineStmt;
+  result->var_ = new Variable;
+  assert(tokens[begin].type == Token::TYPE::STRING);
+  result->var_->type_name_ = tokens[begin].get<std::string>();
+  ++begin;
+  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
+  result->var_->variable_name_ = tokens[begin].get<std::string>();
+  ++begin;
+  if (tokens[begin].token == TOKEN::SEMICOLON) {
+    return result;
+  }
+  assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
+  size_t match_parent = FindMatchedParenthesis(tokens, begin);
+  while (true) {
+    if (begin == match_parent) {
+      break;
+    }
+    ++begin;
+    size_t next = FindNextCommaOrRightParenthesis(tokens, begin);
+    // variable_name(xxxxx, xxxxx, xxxx)
+    //           |    |
+    //         begin end
+    result->constructors_.push_back(ParseExpression(tokens, begin, next));
+    begin = next;
+  }
+  ++begin;
+  assert(tokens[begin].token == TOKEN::SEMICOLON);
+  end = begin + 1;
+  return result;
 }
 
 void Parse(const std::vector<Token>& tokens) {
@@ -419,7 +464,9 @@ void Parse(const std::vector<Token>& tokens) {
     }
     else {
       size_t next = 0;
-      Variable* v = ParseVariableDefinition(tokens, index, next);
+      //TODO : vs应该被记录在顶级作用域中。
+      VariableDefineStmt* vs = ParseVariableDefinition(tokens, index, next);
+      Variable* v = vs->var_;
       assert(Scopes::instance().GetCurrentScope().index_ == 0);
       assert(Scopes::instance().GetCurrentScope().Find(v->variable_name_) == false);
       Scopes::instance().GetCurrentScope().vars_[v->variable_name_] = v;
