@@ -29,16 +29,21 @@ FindMatch(FindMatchedParenthesis, TOKEN::LEFT_PARENTHESIS, TOKEN::RIGHT_PARENTHE
 FindMatch(FindMatchedBrace, TOKEN::LEFT_BRACE, TOKEN::RIGHT_BRACE);
 
 //因为要处理空语句，因此begin本身可能就是分号。
-size_t FindNextSemicolon(const std::vector<Token>& tokens, size_t begin) {
-  size_t index = begin;
-  while (index < tokens.size()) {
-    if (tokens[index].token == TOKEN::SEMICOLON) {
-      return index;
-    }
-    ++index;
-  }
-  return -1;
+#define FindNext(FuncName, x) \
+size_t FuncName(const std::vector<Token>& tokens, size_t begin) { \
+  size_t index = begin; \
+  while (index < tokens.size()) { \
+    if(tokens[index].token == x) { \
+      return index; \
+    } \
+    ++index; \
+  } \
+  return -1; \
 }
+
+FindNext(FindNextSemicolon, TOKEN::SEMICOLON);
+
+FindNext(FindNextComma, TOKEN::COMMA);
 
 size_t FindNextCommaOrRightParenthesis(const std::vector<Token>& tokens, size_t begin) {
   size_t index = begin;
@@ -312,12 +317,14 @@ std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::v
     if (index == end) {
       break;
     }
-    assert(tokens[begin].token == TOKEN::ID && tokens[index].type == Token::TYPE::STRING);
-    assert(tokens[begin].token == TOKEN::ID && tokens[index + 1].type == Token::TYPE::STRING);
+    assert(tokens[index].type == Token::TYPE::STRING);
+    assert(tokens[index + 1].token == TOKEN::ID && tokens[index + 1].type == Token::TYPE::STRING);
     result.push_back({ tokens[index].get<std::string>(), tokens[index + 1].get<std::string>() });
     index += 2;
-    assert(tokens[index].token == TOKEN::COMMA);
-    ++index;
+    assert(tokens[index].token == TOKEN::COMMA || tokens[index].token == TOKEN::RIGHT_PARENTHESIS);
+    if (tokens[index].token == TOKEN::COMMA) {
+      ++index;
+    }
     assert(index <= end);
   }
   return result;
