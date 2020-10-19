@@ -1,4 +1,5 @@
 #include "scope.h"
+#include "variable.h"
 #include <cassert>
 
 Scopes& Scopes::instance() {
@@ -23,6 +24,19 @@ Scope& Scopes::GetCurrentScope() {
 void Scopes::LeaveScope() {
   assert(current_scope_index_ > 0);
   current_scope_index_ = scopes_[current_scope_index_].parent_index_;
+}
+
+Variable* Scopes::VariableStaticBinding(const std::string& var_name, size_t scope_index) {
+  size_t index = scope_index;
+  while (true) {
+    if (scopes_[index].Find(var_name) == true) {
+      return scopes_[index].vars_[var_name];
+    }
+    assert(index > 0);
+    index = scopes_[index].parent_index_;
+  }
+  // never attach there.
+  return nullptr;
 }
 
 Scopes::Scopes() {

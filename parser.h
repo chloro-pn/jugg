@@ -38,5 +38,4 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end);
 VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& token, size_t begin, size_t& end);
 
 // 解析的顶级结构应该是type的定义、func的定义，全局变量的定义
-// 目前考虑func的定义
 void Parse(const std::vector<Token>& tokens);

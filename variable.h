@@ -26,3 +26,5 @@ class IntVariable : public Variable {
  public:
    int64_t var_;
 };
+
+Variable* CreateVariable(const std::string& type);

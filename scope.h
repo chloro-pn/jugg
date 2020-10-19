@@ -2,6 +2,7 @@
 #include <vector>
 #include <unordered_map>
 #include "variable.h"
+#include "ast_node.h"
 
 class Scope {
 public:
@@ -22,10 +23,15 @@ public:
   static Scopes& instance();
   void EnterNewScope(Scope::TYPE);
   Scope& GetCurrentScope();
+  std::vector<VariableDefineStmt*>& GetGlobalVariableStmt() {
+    return global_variable_stmt_;
+  }
   void LeaveScope();
+  Variable* VariableStaticBinding(const std::string& var_name, size_t scope_index);
 
 private:
   Scopes();
   int current_scope_index_;
   std::vector<Scope> scopes_;
+  std::vector<VariableDefineStmt*> global_variable_stmt_;
 };

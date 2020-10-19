@@ -102,33 +102,33 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
   std::stack<TOKEN> operators;
   for (size_t i = begin; i < end; ++i) {
     TOKEN current_token = tokens[i].token;
-    //左括号特殊处理，因为其改变了运算优先级
+    // 左括号特殊处理，因为其改变了运算优先级
     if (current_token == TOKEN::LEFT_PARENTHESIS) {
       size_t match_parent = FindMatchedParenthesis(tokens, i);
-      //如果左括号不是表达式的第一个TOKEN并且其前面的TOKEN不是运算符，则应该是函数调用表达式。
-      if (i > begin && OperatorSet::instance().find(tokens[i - 1].token) == false) {
-        assert(operands.empty() == false);
-        Expression* func_name = operands.top();
-        operands.pop();
-        //这里需要确认func_name表达式是IdExpr。
-        assert(tokens[i - 1].type == Token::TYPE::STRING);
-        assert(tokens[i - 1].token == TOKEN::ID);
-        operands.push(ParseFuncCallExpr(tokens, i - 1, match_parent));
-      }
-      else {
-        //递归求解括号中的表达式
-        operands.push(ParseExpression(tokens, i, match_parent));
-      }
+      // 递归求解括号中的表达式
+      operands.push(ParseExpression(tokens, i, match_parent));
       i = match_parent;
       continue;
     }
-    //所有的右括号TOKEN应该被跳过
+    // 所有的右括号TOKEN应该被跳过
     assert(current_token != TOKEN::RIGHT_PARENTHESIS);
     if (OperatorSet::instance().find(current_token) == false) {
-      //是操作数，直接入栈
-      IdExpr* idexpr = new IdExpr;
-      idexpr->token_index_ = i;
-      operands.push(idexpr);
+      //函数调用语句
+      if (tokens[i].type == Token::TYPE::STRING && FuncSet::instance().Find(tokens[i].get<std::string>()) == true) {
+        assert(tokens[i + 1].token == TOKEN::LEFT_PARENTHESIS);
+        size_t match_parent = FindMatchedParenthesis(tokens, i + 1);
+        operands.push(ParseFuncCallExpr(tokens, i, match_parent));
+        i = match_parent;
+      }
+      else {
+        //操作数，在构造处执行静态绑定
+        assert(tokens[i].token == TOKEN::ID);
+        IdExpr* idexpr = new IdExpr;
+        idexpr->id_name_ = tokens[i].get<std::string>();
+        idexpr->scope_index_ = Scopes::instance().GetCurrentScope().index_;
+        idexpr->var_ = Scopes::instance().VariableStaticBinding(idexpr->id_name_, idexpr->scope_index_);
+        operands.push(idexpr);
+      }
       continue;
     }
     else {
@@ -346,8 +346,18 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   size_t match_parent = FindMatchedParenthesis(tokens, begin);
   ++begin;
 
+  //每个Func对象都有一个对应的Scope绑定。
+  result.scope_index_ = Scopes::instance().GetCurrentScope().index_;
+
+  //TODO : 用参数列表填充Scope中的变量表。
   result.parameter_type_list_ = ParseParameterList(tokens, begin, match_parent);
+  for (auto& each : result.parameter_type_list_) {
+    assert(Scopes::instance().GetCurrentScope().Find(each.second) == false);
+    //不在这里进行变量初始化，由解释器填充。
+    Scopes::instance().GetCurrentScope().vars_[each.second] = CreateVariable(each.second);
+  }
   begin = match_parent + 1;
+
   //函数返回值的类型在类型系统中可以找到。
   assert(tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
   result.return_type_ = tokens[begin].get<std::string>();
@@ -418,14 +428,15 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 // 检查是否与变量数据成员的类型匹配。
 VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   VariableDefineStmt* result = new VariableDefineStmt;
-  result->var_ = new Variable;
   assert(tokens[begin].type == Token::TYPE::STRING);
-  result->var_->type_name_ = tokens[begin].get<std::string>();
+  std::string type_name = tokens[begin].get<std::string>();
+  result->var_ = CreateVariable(type_name);
   ++begin;
   assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
   result->var_->variable_name_ = tokens[begin].get<std::string>();
   ++begin;
   if (tokens[begin].token == TOKEN::SEMICOLON) {
+    end = begin + 1;
     return result;
   }
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
@@ -471,12 +482,13 @@ void Parse(const std::vector<Token>& tokens) {
     }
     else {
       size_t next = 0;
-      //TODO : vs应该被记录在顶级作用域中。
+      //[done] vs应该被记录在顶级作用域中。
       VariableDefineStmt* vs = ParseVariableDefinition(tokens, index, next);
       Variable* v = vs->var_;
       assert(Scopes::instance().GetCurrentScope().index_ == 0);
       assert(Scopes::instance().GetCurrentScope().Find(v->variable_name_) == false);
       Scopes::instance().GetCurrentScope().vars_[v->variable_name_] = v;
+      Scopes::instance().GetGlobalVariableStmt().push_back(vs);
       index = next;
     }
   }
