@@ -1,6 +1,69 @@
 #include "scope.h"
-#include "variable.h"
+#include "type.h"
 #include <cassert>
+#include <algorithm>
+
+bool FuncScope::Find(const std::string& name) const {
+  Func& func = FuncSet::instance().Get(name);
+  if (func.parameter_type_list_.find(name) != func.parameter_type_list_.end()) {
+    return true;
+  }
+  return vars_.find(name) != vars_.end();
+}
+
+std::string FuncScope::Get(const std::string& name) {
+  Func& func = FuncSet::instance().Get(func_name_);
+  if (func.parameter_type_list_.find(name) != func.parameter_type_list_.end()) {
+    return func.parameter_type_list_[name];
+  }
+  return vars_[name];
+}
+
+//这个接口仅注册局部变量，不注册参数列表
+void FuncScope::Set(const std::string& var_name, const std::string& type_name) {
+  vars_[var_name] = type_name;
+}
+
+bool TypeScope::Find(const std::string& name) const {
+  return vars_.find(name) != vars_.end();
+}
+
+std::string TypeScope::Get(const std::string& name) {
+  return vars_[name];
+}
+
+void TypeScope::Set(const std::string& var_name, const std::string& v) {
+  vars_[var_name] = v;
+}
+
+bool MethodScope::Find(const  std::string& name) const {
+  Type& type = TypeSet::instance().Get(type_name_);
+  Method& method = type.methods_[method_name_];
+  if (method.parameter_type_list_.find(name) != method.parameter_type_list_.end()) {
+    return true;
+  }
+  if (type.datas_.find(name) != type.datas_.end()) {
+    return true;
+  }
+  return vars_.find(name) != vars_.end();
+}
+
+std::string MethodScope::Get(const std::string& name) {
+  Type& type = TypeSet::instance().Get(type_name_);
+  Method& method = type.methods_[method_name_];
+  if (method.parameter_type_list_.find(name) != method.parameter_type_list_.end()) {
+    return method.parameter_type_list_[name];
+  }
+  if (type.datas_.find(name) != type.datas_.end()) {
+    return type.datas_[name];
+  }
+  return vars_[name];
+}
+
+//这个接口仅注册局部变量，不注册参数列表和类型的成员列表
+void MethodScope::Set(const std::string& var_name, const std::string& v) {
+  vars_[var_name] = v;
+}
 
 Scopes& Scopes::instance() {
   static Scopes obj;
@@ -50,19 +113,6 @@ Scope* Scopes::GetCurrentScope() {
 void Scopes::LeaveScope() {
   assert(current_scope_index_ > 0);
   current_scope_index_ = scopes_[current_scope_index_]->parent_index_;
-}
-
-Variable* Scopes::VariableStaticBinding(const std::string& var_name) {
-  size_t index = GetCurrentScope()->index_;
-  while (true) {
-    if (scopes_[index]->Find(var_name) == true) {
-      return scopes_[index]->Get(var_name);
-    }
-    assert(index > 0);
-    index = scopes_[index]->parent_index_;
-  }
-  // never attach there.
-  return nullptr;
 }
 
 Scopes::Scopes() {

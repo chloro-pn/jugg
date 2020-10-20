@@ -2,7 +2,6 @@
 #include <unordered_map>
 #include <functional>
 #include "scanner.h"
-#include "variable.h"
 
 struct Operator {
   int level_;

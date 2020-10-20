@@ -1,19 +1,18 @@
 #pragma once
 #include <vector>
 #include <unordered_map>
-#include "variable.h"
 #include "ast_node.h"
 
 class Scope {
 public:
   int index_;
   int parent_index_;
-  std::unordered_map<std::string, Variable*> vars_;
+  std::unordered_map<std::string, std::string> vars_;
 
   virtual ~Scope() = default;
   virtual bool Find(const std::string& name) const = 0;
-  virtual Variable* Get(const std::string& name) = 0;
-  virtual void Set(const std::string var_name, Variable* v) = 0;
+  virtual std::string Get(const std::string& name) = 0;
+  virtual void Set(const std::string& var_name, const std::string& type_name) = 0;
 };
 
 class BlockScope : public Scope {
@@ -22,12 +21,12 @@ public:
     return vars_.find(name) != vars_.end();
   }
 
-  Variable* Get(const std::string& name) override {
+  std::string Get(const std::string& name) override {
     return vars_[name];
   }
 
-  void Set(const std::string var_name, Variable* v) override {
-
+  void Set(const std::string& var_name, const std::string& v) override {
+    vars_[var_name] = v;
   }
 };
 
@@ -35,34 +34,22 @@ class FuncScope : public Scope {
 public:
   std::string func_name_;
   
-  bool Find(const  std::string& name) const override {
-    //TODO
-  }
+  bool Find(const  std::string& name) const override;
 
-  Variable* Get(const std::string& name) override {
-    //TODO
-  }
+  std::string Get(const std::string& name) override;
 
-  void Set(const std::string var_name, Variable* v) override {
-
-  }
+  void Set(const std::string& var_name, const std::string& v) override;
 };
 
 class TypeScope : public Scope {
 public:
   std::string type_name_;
   
-  bool Find(const  std::string& name) const override {
-    //TODO
-  }
+  bool Find(const  std::string& name) const override;
 
-  Variable* Get(const std::string& name) override {
-    //TODO
-  }
+  std::string Get(const std::string& name) override;
 
-  void Set(const std::string var_name, Variable* v) override {
-
-  }
+  void Set(const std::string& var_name, const std::string& v) override;
 };
 
 class MethodScope : public Scope {
@@ -70,17 +57,11 @@ public:
   std::string type_name_;
   std::string method_name_;
   
-  bool Find(const  std::string& name) const override {
-    //TODO
-  }
+  bool Find(const  std::string& name) const override;
 
-  Variable* Get(const std::string& name) override {
-    //TODO
-  }
+  std::string Get(const std::string& name) override;
 
-  void Set(const std::string var_name, Variable* v) override {
-
-  }
+  void Set(const std::string& var_name, const std::string& v) override;
 };
 
 class Scopes {
@@ -95,7 +76,6 @@ public:
     return global_variable_stmt_;
   }
   void LeaveScope();
-  Variable* VariableStaticBinding(const std::string& var_name);
 
 private:
   Scopes();

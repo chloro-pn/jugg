@@ -3,14 +3,13 @@
 #include <string>
 #include <unordered_map>
 #include "scanner.h"
-#include "variable.h"
 
 class BlockStmt;
 
 class Func {
  public:
   std::string func_name_;
-  std::vector<std::pair<std::string, Variable*>> parameter_type_list_;
+  std::unordered_map<std::string, std::string> parameter_type_list_;
   std::string return_type_;
   std::size_t scope_index_;
   BlockStmt* block_;
@@ -24,7 +23,7 @@ class FuncSet {
     return funcs_.find(func_name) != funcs_.end();
   }
 
-  Func Get(const std::string& func_name) {
+  Func& Get(const std::string& func_name) {
     return funcs_[func_name];
   }
 

@@ -3,13 +3,11 @@
 #include <unordered_map>
 #include <vector>
 #include "func.h"
-#include "variable.h"
 
 class Method {
 public:
-  Variable* caller_;
   std::string method_name_;
-  std::vector<std::pair<std::string, Variable*>> parameter_type_list_;
+  std::unordered_map<std::string, std::string> parameter_type_list_;
   std::string return_type_;
   std::size_t scope_index_;
   BlockStmt* block_;
@@ -40,15 +38,15 @@ class TypeSet {
 public:
   static TypeSet& instance();
 
-  bool Find(std::string type_name) const {
+  bool Find(const std::string& type_name) const {
     return types_.find(type_name) != types_.end();
   }
 
-  Type Get(std::string type_name) {
+  Type& Get(const std::string& type_name) {
     return types_[type_name];
   }
 
-  void Set(std::string type_name, const Type& type) {
+  void Set(const std::string& type_name, const Type& type) {
     types_[type_name] = type;
   }
 
