@@ -36,7 +36,7 @@ void TypeScope::Set(const std::string& var_name, const std::string& v) {
   vars_[var_name] = v;
 }
 
-bool MethodScope::Find(const  std::string& name) const {
+bool MethodScope::Find(const std::string& name) const {
   Type& type = TypeSet::instance().Get(type_name_);
   Method& method = type.methods_[method_name_];
   if (method.parameter_type_list_.find(name) != method.parameter_type_list_.end()) {
@@ -108,6 +108,18 @@ void Scopes::EnterMethodScope(const std::string& method_name) {
 Scope* Scopes::GetCurrentScope() {
   assert(current_scope_index_ >= 0 && current_scope_index_ < scopes_.size());
   return scopes_[current_scope_index_];
+}
+
+size_t Scopes::VariableStaticBinding(const std::string& var_name) {
+  size_t index = GetCurrentScope()->index_;
+  while (true) {
+    if (scopes_[index]->Find(var_name) == true) {
+      return index;
+    }
+    assert(index > 0);
+    index = scopes_[index]->parent_index_;
+  }
+  return -1;
 }
 
 void Scopes::LeaveScope() {

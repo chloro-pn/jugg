@@ -72,6 +72,7 @@ public:
   void EnterTypeScope(const std::string&);
   void EnterMethodScope(const std::string&);
   Scope* GetCurrentScope();
+  size_t VariableStaticBinding(const std::string&);
   std::vector<VariableDefineStmt*>& GetGlobalVariableStmt() {
     return global_variable_stmt_;
   }

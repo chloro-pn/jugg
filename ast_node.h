@@ -103,4 +103,5 @@ class VariableDefineStmt : public Statement {
   std::string type_name_;
   std::string var_name_;
   std::vector<Expression*> constructors_;
+  size_t scope_index_;
 };

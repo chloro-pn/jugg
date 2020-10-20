@@ -125,7 +125,7 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         IdExpr* idexpr = new IdExpr;
         //通过id_name_和scope_index_可以在O(1)时间内定位到变量。
         idexpr->id_name_ = tokens[i].get<std::string>();
-        idexpr->scope_index_ = Scopes::instance().GetCurrentScope()->index_;
+        idexpr->scope_index_ = Scopes::instance().VariableStaticBinding(idexpr->id_name_);
         operands.push(idexpr);
       }
       continue;
@@ -363,10 +363,20 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
   Method result;
   assert(tokens[begin].token == TOKEN::METHOD);
   ++begin;
-  //函数名称
+  assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
+  ++begin;
+  assert(tokens[begin].type == Token::TYPE::STRING);
+  result.type_name_ = tokens[begin].get<std::string>();
+  static_cast<MethodScope*>(Scopes::instance().GetCurrentScope())->type_name_ = result.type_name_;
+  assert(TypeSet::instance().Find(result.type_name_) == true);
+  ++begin;
+  assert(tokens[begin].token == TOKEN::RIGHT_PARENTHESIS);
+
+  ++begin;
+  //方法名称
   assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
   result.method_name_ = tokens[begin].get<std::string>();
-  static_cast<FuncScope*>(Scopes::instance().GetCurrentScope())->func_name_ = result.method_name_;
+  static_cast<MethodScope*>(Scopes::instance().GetCurrentScope())->method_name_ = result.method_name_;
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   size_t match_parent = FindMatchedParenthesis(tokens, begin);
@@ -393,9 +403,6 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
 // type type_name {
 //   int age;
 //   string name;
-//   method GetName() string {
-//     return name;
-//   }
 // }
 Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   Type result;
@@ -403,6 +410,7 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   ++begin;
   assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
   result.type_name_ = tokens[begin].get<std::string>();
+  static_cast<TypeScope*>(Scopes::instance().GetCurrentScope())->type_name_ = result.type_name_;
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
@@ -413,28 +421,17 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
     if (begin == end) {
       break;
     }
-    if (tokens[begin].token == TOKEN::METHOD) {
-      size_t next = 0;
-      Scopes::instance().EnterMethodScope("unknow");
-      Method method = ParseMethod(tokens, begin, next);
-      Scopes::instance().LeaveScope();
-      assert(result.FindMethod(method.method_name_) == false);
-      result.methods_[method.method_name_] = method;
-      begin = next;
-    }
-    else {
-      assert(tokens[begin].type == Token::TYPE::STRING);
-      assert(TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
-      std::string type_name = tokens[begin].get<std::string>();
-      ++begin;
-      assert(tokens[begin].type == Token::TYPE::STRING);
-      std::string var_name = tokens[begin].get<std::string>();
-      assert(result.FindData(var_name) == false);
-      result.datas_[var_name] = type_name;
-      ++begin;
-      assert(tokens[begin].token == TOKEN::SEMICOLON);
-      ++begin;
-    }
+    assert(tokens[begin].type == Token::TYPE::STRING);
+    assert(TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
+    std::string type_name = tokens[begin].get<std::string>();
+    ++begin;
+    assert(tokens[begin].type == Token::TYPE::STRING);
+    std::string var_name = tokens[begin].get<std::string>();
+    assert(result.FindData(var_name) == false);
+    result.datas_[var_name] = type_name;
+    ++begin;
+    assert(tokens[begin].token == TOKEN::SEMICOLON);
+    ++begin;
   }
   ++end;
   return result;
@@ -446,6 +443,7 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 // 检查是否与变量数据成员的类型匹配。
 VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   VariableDefineStmt* result = new VariableDefineStmt;
+  result->scope_index_ = Scopes::instance().GetCurrentScope()->index_;
   assert(tokens[begin].type == Token::TYPE::STRING);
   result->type_name_ = tokens[begin].get<std::string>();
   ++begin;
@@ -500,6 +498,15 @@ void Parse(const std::vector<Token>& tokens) {
       index = next;
       assert(TypeSet::instance().Find(type.type_name_) == false);
       TypeSet::instance().Set(type.type_name_, type);
+    }
+    else if (current_token == TOKEN::METHOD) {
+      size_t next = 0;
+      Scopes::instance().EnterMethodScope("unknow");
+      Method method = ParseMethod(tokens, index, next);
+      Scopes::instance().LeaveScope();
+      index = next;
+      assert(TypeSet::instance().Find(method.type_name_) == true);
+      TypeSet::instance().Get(method.type_name_).methods_[method.method_name_] = method;
     }
     else {
       size_t next = 0;

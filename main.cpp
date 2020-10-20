@@ -3,25 +3,28 @@
 #include "parser.h"
 
 /*
- e://main.pn :
-
 // 这是一个测试文件
-func get() int {
+
+int a;
+int b;
+int c(b);
+func get() int{
 
 }
 
-type Person {
+type Person{
   string name;
   int age;
-  func getAge() int {
-    return age;
-  }
 }
 
-func main() void {
-  Person ps(a, b+c, get());
+method(Person) getAge() int{
+  return age;
 }
- */
+
+func main() void{
+  Person ps(a, b + c, get());
+}
+*/
 
 int main() {
   Scanner scanner("e://main.pn");

@@ -6,6 +6,7 @@
 
 class Method {
 public:
+  std::string type_name_;
   std::string method_name_;
   std::unordered_map<std::string, std::string> parameter_type_list_;
   std::string return_type_;
