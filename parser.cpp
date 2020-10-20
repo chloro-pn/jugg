@@ -374,9 +374,7 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
 
   result.scope_index_ = Scopes::instance().GetCurrentScope()->index_;
 
-  //TODO : 用参数列表填充Scope中的变量表。
   result.parameter_type_list_ = ParseParameterList(tokens, begin, match_parent);
-
   begin = match_parent + 1;
 
   //函数返回值的类型在类型系统中可以找到。
@@ -395,7 +393,7 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
 // type type_name {
 //   int age;
 //   string name;
-//   func GetName() string {
+//   method GetName() string {
 //     return name;
 //   }
 // }
