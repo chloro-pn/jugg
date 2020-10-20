@@ -3,6 +3,17 @@
 #include <unordered_map>
 #include <vector>
 #include "func.h"
+#include "variable.h"
+
+class Method {
+public:
+  Variable* caller_;
+  std::string method_name_;
+  std::vector<std::pair<std::string, Variable*>> parameter_type_list_;
+  std::string return_type_;
+  std::size_t scope_index_;
+  BlockStmt* block_;
+};
 
 //TODO
 class Type {
@@ -10,7 +21,7 @@ class Type {
   std::string type_name_;
   // {var_name, type_name}
   std::unordered_map<std::string, std::string> datas_;
-  std::unordered_map<std::string, Func> methods_;
+  std::unordered_map<std::string, Method> methods_;
 
   explicit Type(const std::string& str = "") : type_name_(str) {
 

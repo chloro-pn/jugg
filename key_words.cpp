@@ -18,6 +18,7 @@ static void register_buildin_keyword(std::unordered_map<std::string, TOKEN>& con
   container["void"] = TOKEN::VOID;
   container["func"] = TOKEN::FUNC;
   container["type"] = TOKEN::TYPE;
+  container["method"] = TOKEN::METHOD;
 }
 
 KeyWords& KeyWords::instance() {

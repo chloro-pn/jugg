@@ -73,6 +73,8 @@ enum class TOKEN {
   FUNC,
   //类型
   TYPE,
+  //方法
+  METHOD,
 
   INVALID,
   //结束标志

@@ -112,7 +112,7 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
     }
     // 所有的右括号TOKEN应该被跳过
     assert(current_token != TOKEN::RIGHT_PARENTHESIS);
-    if (OperatorSet::instance().find(current_token) == false) {
+    if (OperatorSet::instance().Find(current_token) == false) {
       //函数调用语句
       if (tokens[i].type == Token::TYPE::STRING && FuncSet::instance().Find(tokens[i].get<std::string>()) == true) {
         assert(tokens[i + 1].token == TOKEN::LEFT_PARENTHESIS);
@@ -125,8 +125,8 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         assert(tokens[i].token == TOKEN::ID);
         IdExpr* idexpr = new IdExpr;
         idexpr->id_name_ = tokens[i].get<std::string>();
-        idexpr->scope_index_ = Scopes::instance().GetCurrentScope().index_;
-        idexpr->var_ = Scopes::instance().VariableStaticBinding(idexpr->id_name_, idexpr->scope_index_);
+        idexpr->scope_index_ = Scopes::instance().GetCurrentScope()->index_;
+        idexpr->var_ = Scopes::instance().VariableStaticBinding(idexpr->id_name_);
         operands.push(idexpr);
       }
       continue;
@@ -194,20 +194,14 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     assert(tokens[begin].token == TOKEN::LEFT_BRACE);
     size_t match_brace = FindMatchedBrace(tokens, begin);
 
-    Scopes::instance().EnterNewScope(Scope::TYPE::BLOCK);
     tmp->if_block_ = ParseBlockStmt(tokens, begin, match_brace);
-    Scopes::instance().LeaveScope();
 
     begin = match_brace + 1;
     if (tokens[begin].token == TOKEN::ELSE) {
       ++begin;
       assert(tokens[begin].token == TOKEN::LEFT_BRACE);
       end = FindMatchedBrace(tokens, begin);
-
-      Scopes::instance().EnterNewScope(Scope::TYPE::BLOCK);
       tmp->else_block_ = ParseBlockStmt(tokens, begin, end);
-      Scopes::instance().LeaveScope();
-
       ++end;
     }
     else {
@@ -227,10 +221,7 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     begin = match_parent + 1;
     assert(tokens[begin].token == TOKEN::LEFT_BRACE);
     size_t match_brace = FindMatchedBrace(tokens, begin);
-
-    Scopes::instance().EnterNewScope(Scope::TYPE::BLOCK);
     tmp->block_ = ParseBlockStmt(tokens, begin, match_brace);
-    Scopes::instance().LeaveScope();
 
     result = tmp;
     end = match_brace + 1;
@@ -255,11 +246,7 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     begin = match_parent + 1;
     assert(tokens[begin].token == TOKEN::LEFT_BRACE);
     size_t match_brace = FindMatchedBrace(tokens, begin);
-
-    Scopes::instance().EnterNewScope(Scope::TYPE::BLOCK);
     tmp->block_ = ParseBlockStmt(tokens, begin, match_brace);
-    Scopes::instance().LeaveScope();
-
     result = tmp;
     end = match_brace + 1;
     return result;
@@ -293,9 +280,9 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
   else if (tokens[begin].token == TOKEN::ID && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true) {
     //变量定义语句
     VariableDefineStmt* v = ParseVariableDefinition(tokens, begin, end);
-    //TODO 结合块， 作用域结构，向对应作用域结构中注册变量v。
-    assert(Scopes::instance().GetCurrentScope().Find(v->var_->variable_name_) == false);
-    Scopes::instance().GetCurrentScope().vars_[v->var_->variable_name_] = v->var_;
+    //向当前作用域结构中注册变量v。
+    assert(Scopes::instance().GetCurrentScope()->Find(v->var_->variable_name_) == false);
+    Scopes::instance().GetCurrentScope()->Set(v->var_->variable_name_, v->var_);
     return v;
   }
   else {
@@ -309,9 +296,9 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
   }
 }
 
-std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
+std::vector<std::pair<std::string, Variable*>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
-  std::vector<std::pair<std::string, std::string>> result;
+  std::vector<std::pair<std::string, Variable*>> result;
   size_t index = begin;
   while (true) {
     if (index == end) {
@@ -319,7 +306,10 @@ std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::v
     }
     assert(tokens[index].type == Token::TYPE::STRING);
     assert(tokens[index + 1].token == TOKEN::ID && tokens[index + 1].type == Token::TYPE::STRING);
-    result.push_back({ tokens[index].get<std::string>(), tokens[index + 1].get<std::string>() });
+    std::string type_name = tokens[index].get<std::string>();
+    Variable* v = CreateVariable(type_name);
+    v->variable_name_ = tokens[index + 1].get<std::string>();
+    result.push_back({ type_name, v });
     index += 2;
     assert(tokens[index].token == TOKEN::COMMA || tokens[index].token == TOKEN::RIGHT_PARENTHESIS);
     if (tokens[index].token == TOKEN::COMMA) {
@@ -334,7 +324,6 @@ std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::v
 // 当一个TOKEN是类型名称或函数名称时，通过在编译程序中寻找，确定具体的类型、函数。
 // 当一个TOKEN是变量名称时，通过作用域系统的支撑定位变量位置。
 Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
-  Scopes::instance().EnterNewScope(Scope::TYPE::FUNC);
   Func result;
   assert(tokens[begin].token == TOKEN::FUNC);
   ++begin;
@@ -346,16 +335,11 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   size_t match_parent = FindMatchedParenthesis(tokens, begin);
   ++begin;
 
-  //每个Func对象都有一个对应的Scope绑定。
-  result.scope_index_ = Scopes::instance().GetCurrentScope().index_;
+  result.scope_index_ = Scopes::instance().GetCurrentScope()->index_;
 
   //TODO : 用参数列表填充Scope中的变量表。
   result.parameter_type_list_ = ParseParameterList(tokens, begin, match_parent);
-  for (auto& each : result.parameter_type_list_) {
-    assert(Scopes::instance().GetCurrentScope().Find(each.second) == false);
-    //不在这里进行变量初始化，由解释器填充。
-    Scopes::instance().GetCurrentScope().vars_[each.second] = CreateVariable(each.second);
-  }
+
   begin = match_parent + 1;
 
   //函数返回值的类型在类型系统中可以找到。
@@ -367,8 +351,12 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   //函数体
   result.block_ = ParseBlockStmt(tokens, begin, match_brace);
   end = match_brace + 1;
-  Scopes::instance().LeaveScope();
   return result;
+}
+
+//TODO
+Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) {
+
 }
 
 // type定义：
@@ -380,7 +368,6 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 //   }
 // }
 Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
-  Scopes::instance().EnterNewScope(Scope::TYPE::TYPE);
   Type result;
   assert(tokens[begin].token == TOKEN::TYPE);
   ++begin;
@@ -396,11 +383,11 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
     if (begin == end) {
       break;
     }
-    if (tokens[begin].token == TOKEN::FUNC) {
+    if (tokens[begin].token == TOKEN::METHOD) {
       size_t next = 0;
-      Func func = ParseFunc(tokens, begin, next);
-      assert(result.FindMethod(func.func_name_) == false);
-      result.methods_[func.func_name_] = func;
+      Method method = ParseMethod(tokens, begin, next);
+      assert(result.FindMethod(method.method_name_) == false);
+      result.methods_[method.method_name_] = method;
       begin = next;
     }
     else {
@@ -418,7 +405,6 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
     }
   }
   ++end;
-  Scopes::instance().LeaveScope();
   return result;
 }
 
@@ -485,9 +471,9 @@ void Parse(const std::vector<Token>& tokens) {
       //[done] vs应该被记录在顶级作用域中。
       VariableDefineStmt* vs = ParseVariableDefinition(tokens, index, next);
       Variable* v = vs->var_;
-      assert(Scopes::instance().GetCurrentScope().index_ == 0);
-      assert(Scopes::instance().GetCurrentScope().Find(v->variable_name_) == false);
-      Scopes::instance().GetCurrentScope().vars_[v->variable_name_] = v;
+      assert(Scopes::instance().GetCurrentScope()->index_ == 0);
+      assert(Scopes::instance().GetCurrentScope()->Find(v->variable_name_) == false);
+      Scopes::instance().GetCurrentScope()->Set(v->variable_name_, v);
       Scopes::instance().GetGlobalVariableStmt().push_back(vs);
       index = next;
     }

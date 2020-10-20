@@ -34,19 +34,17 @@ class OperatorSet {
     return os;
   }
 
-  bool find(const TOKEN& token) {
+  bool Find(const TOKEN& token) {
     auto it = operators_.find(token);
     return it != operators_.end();
   }
 
-  Operator& get(const TOKEN& token) {
+  Operator& Get(const TOKEN& token) {
     return operators_[token];
   }
 
   int GetLevel(TOKEN token) {
-    if (find(token) == false) {
-      return -1;
-    }
+    assert(Find(token) == true);
     return operators_[token].level_;
   }
 
