@@ -92,6 +92,35 @@ FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, 
   return result;
 }
 
+MethodCallExpr* ParseMethodCallExpr(const std::vector<Token>& tokens, size_t begin, size_t end) {
+  MethodCallExpr* result = new MethodCallExpr;
+  assert(tokens[begin].token == TOKEN::ID);
+  assert(tokens[begin].type == Token::TYPE::STRING);
+  result->var_name_ = tokens[begin].get<std::string>();
+  ++begin;
+  assert(tokens[begin].token == TOKEN::DECIMAL_POINT);
+  ++begin;
+  assert(tokens[begin].token == TOKEN::ID);
+  assert(tokens[begin].type == Token::TYPE::STRING);
+  result->method_name_ = tokens[begin].get<std::string>();
+  ++begin;
+  assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
+  assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
+  while (true) {
+    if (begin == end) {
+      break;
+    }
+    ++begin;
+    size_t next = FindNextCommaOrRightParenthesis(tokens, begin);
+    // func_name(xxxxx, xxxxx, xxxx)
+    //           |    |
+    //         begin end
+    result->parameters_.push_back(ParseExpression(tokens, begin, next));
+    begin = next;
+  }
+  return result;
+}
+
 // end是表达式最后一个token的下一个token索引值。
 // TODO : 处理函数调用表达式和下标访问表达式，成员访问表达式。
 Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size_t end) {
@@ -113,20 +142,69 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
     // 所有的右括号TOKEN应该被跳过
     assert(current_token != TOKEN::RIGHT_PARENTHESIS);
     if (OperatorSet::instance().Find(current_token) == false) {
-      //函数调用语句
+      //函数调用表达式
       if (tokens[i].type == Token::TYPE::STRING && FuncSet::instance().Find(tokens[i].get<std::string>()) == true) {
         assert(tokens[i + 1].token == TOKEN::LEFT_PARENTHESIS);
         size_t match_parent = FindMatchedParenthesis(tokens, i + 1);
         operands.push(ParseFuncCallExpr(tokens, i, match_parent));
         i = match_parent;
       }
+      //成员访问表达式
+      else if (i + 1 < tokens.size() && tokens[i + 1].token == TOKEN::DECIMAL_POINT) {
+        //方法访问 a  .  bcd  ( xxx )...
+        //         i i+1 i+2 i+3
+        if (i + 3 < tokens.size() && tokens[i + 3].token == TOKEN::LEFT_PARENTHESIS) {
+          size_t match_parent = FindMatchedParenthesis(tokens, i + 3);
+          operands.push(ParseMethodCallExpr(tokens, i, match_parent));
+          i = match_parent;
+        }
+        //数据成员访问
+        else {
+          DataMemberExpr* expr = new DataMemberExpr;
+          assert(tokens[i].token == TOKEN::ID);
+          expr->var_name_ = tokens[i].get<std::string>();
+          ++i;
+          assert(tokens[i].token == TOKEN::DECIMAL_POINT);
+          ++i;
+          assert(tokens[i].token == TOKEN::ID);
+          expr->data_member_name_ = tokens[i].get<std::string>();
+          operands.push(expr);
+        }
+      }
       else {
-        assert(tokens[i].token == TOKEN::ID);
-        IdExpr* idexpr = new IdExpr;
-        //通过id_name_和scope_index_可以在O(1)时间内定位到变量。
-        idexpr->id_name_ = tokens[i].get<std::string>();
-        idexpr->scope_index_ = Scopes::instance().VariableStaticBinding(idexpr->id_name_);
-        operands.push(idexpr);
+        if (tokens[i].token == TOKEN::TRUE || tokens[i].token == TOKEN::FALSE) {
+          BoolIteralExpr* expr = new BoolIteralExpr;
+          expr->b_ = tokens[i].token == TOKEN::TRUE ? true : false;
+          operands.push(expr);
+        }
+        else if (tokens[i].token == TOKEN::STRING_ITERAL) {
+          StringIteralExpr* expr = new StringIteralExpr;
+          expr->str_ = tokens[i].get<std::string>();
+          operands.push(expr);
+        }
+        else if (tokens[i].token == TOKEN::DOUBLE_ITERAL) {
+          DoubleIteralExpr* expr = new DoubleIteralExpr;
+          expr->d_ = tokens[i].get<double>();
+          operands.push(expr);
+        }
+        else if (tokens[i].token == TOKEN::INT_ITERAL) {
+          IntIteralExpr* expr = new IntIteralExpr;
+          expr->int_ = tokens[i].get<int64_t>();
+          operands.push(expr);
+        }
+        else if (tokens[i].token == TOKEN::CHAR_ITERAL) {
+          CharIteralExpr* expr = new CharIteralExpr;
+          expr->c_ = tokens[i].get<char>();
+          operands.push(expr);
+        }
+        else {
+          assert(tokens[i].token == TOKEN::ID);
+          IdExpr* idexpr = new IdExpr;
+          //通过id_name_和scope_index_可以在O(1)时间内定位到变量。
+          idexpr->id_name_ = tokens[i].get<std::string>();
+          idexpr->scope_index_ = Scopes::instance().VariableStaticBinding(idexpr->id_name_);
+          operands.push(idexpr);
+        }
       }
       continue;
     }
@@ -352,6 +430,8 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
+  //解释 : 这里主要是为了后续函数体表达式解析的变量绑定，因此在解析完成之前首先将含有参数列表的Func对象设置在FuncSet中。
+  FuncSet::instance().Set(result.func_name_, result);
   //函数体
   result.block_ = ParseBlockStmt(tokens, begin, match_brace);
   end = match_brace + 1;
@@ -487,7 +567,7 @@ void Parse(const std::vector<Token>& tokens) {
       Func func = ParseFunc(tokens, index, next);
       Scopes::instance().LeaveScope();
       index = next;
-      assert(FuncSet::instance().Find(func.func_name_) == false);
+      //assert(FuncSet::instance().Find(func.func_name_) == false);
       FuncSet::instance().Set(func.func_name_, func);
     }
     else if (current_token == TOKEN::TYPE) {

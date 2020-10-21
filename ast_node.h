@@ -31,6 +31,19 @@ class FuncCallExpr : public Expression {
   std::vector<Expression*> parameters_;
 };
 
+class MethodCallExpr : public Expression {
+public:
+  std::string var_name_;
+  std::string method_name_;
+  std::vector<Expression*> parameters_;
+};
+
+class DataMemberExpr : public Expression {
+public:
+  std::string var_name_;
+  std::string data_member_name_;
+};
+
 class BinaryExpr : public Expression {
  public:
   Expression* left_;
@@ -44,9 +57,29 @@ class IdExpr : public Expression {
   size_t scope_index_;
 };
 
-class IteralExpr : public Expression {
+class StringIteralExpr : public Expression {
  public:
-  Token token_;
+  std::string str_;
+};
+
+class IntIteralExpr : public Expression {
+public:
+  int64_t int_;
+};
+
+class DoubleIteralExpr : public Expression {
+public:
+  double d_;
+};
+
+class BoolIteralExpr : public Expression {
+public:
+  bool b_;
+};
+
+class CharIteralExpr : public Expression {
+public:
+  char c_;
 };
 
 class Statement : public AstNode {

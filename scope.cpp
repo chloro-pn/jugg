@@ -4,7 +4,7 @@
 #include <algorithm>
 
 bool FuncScope::Find(const std::string& name) const {
-  Func& func = FuncSet::instance().Get(name);
+  Func& func = FuncSet::instance().Get(func_name_);
   if (func.parameter_type_list_.find(name) != func.parameter_type_list_.end()) {
     return true;
   }

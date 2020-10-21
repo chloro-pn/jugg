@@ -19,6 +19,9 @@ size_t FindNextComma(const std::vector<Token>& tokens, size_t begin);
 //函数调用表达式的解析, begin是函数名字，end是右括号。
 FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, size_t end);
 
+//方法访问表达式的解析
+MethodCallExpr* ParseMethodCallExpr(const std::vector<Token>& tokens, size_t begin, size_t end);
+
 // end是表达式最后一个token的下一个token索引值。
 // 目前没有处理索引表达式.
 Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size_t end);
