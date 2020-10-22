@@ -26,6 +26,10 @@ func main() void{
 }
 */
 
+/*
+ * 考虑解释器执行一个变量定义语句， 
+ */
+
 int main() {
   Scanner scanner("e://main.pn");
   Parse(scanner.tokens());

@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include "scanner.h"
+#include "variable.h"
 
 class BlockStmt;
 
@@ -10,6 +11,7 @@ class Func {
  public:
   std::string func_name_;
   std::unordered_map<std::string, std::string> parameter_type_list_;
+  std::unordered_map<std::string, Variable*> storage_;
   std::string return_type_;
   std::size_t scope_index_;
   BlockStmt* block_;

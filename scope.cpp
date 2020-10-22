@@ -3,12 +3,15 @@
 #include <cassert>
 #include <algorithm>
 
-bool FuncScope::Find(const std::string& name) const {
+int FuncScope::Find(const std::string& name) const {
   Func& func = FuncSet::instance().Get(func_name_);
   if (func.parameter_type_list_.find(name) != func.parameter_type_list_.end()) {
-    return true;
+    return index_;
   }
-  return vars_.find(name) != vars_.end();
+  if (vars_.find(name) != vars_.end()) {
+    return index_;
+  }
+  return -1;
 }
 
 std::string FuncScope::Get(const std::string& name) {
@@ -24,8 +27,11 @@ void FuncScope::Set(const std::string& var_name, const std::string& type_name) {
   vars_[var_name] = type_name;
 }
 
-bool TypeScope::Find(const std::string& name) const {
-  return vars_.find(name) != vars_.end();
+int TypeScope::Find(const std::string& name) const {
+  if (vars_.find(name) != vars_.end()) {
+    return index_;
+  }
+  return -1;
 }
 
 std::string TypeScope::Get(const std::string& name) {
@@ -36,16 +42,19 @@ void TypeScope::Set(const std::string& var_name, const std::string& v) {
   vars_[var_name] = v;
 }
 
-bool MethodScope::Find(const std::string& name) const {
+int MethodScope::Find(const std::string& name) const {
   Type& type = TypeSet::instance().Get(type_name_);
   Method& method = type.methods_[method_name_];
   if (method.parameter_type_list_.find(name) != method.parameter_type_list_.end()) {
-    return true;
+    return index_;
   }
   if (type.datas_.find(name) != type.datas_.end()) {
-    return true;
+    return type.scope_index_;
   }
-  return vars_.find(name) != vars_.end();
+  if (vars_.find(name) != vars_.end()) {
+    return index_;
+  }
+  return -1;
 }
 
 std::string MethodScope::Get(const std::string& name) {
@@ -108,6 +117,11 @@ void Scopes::EnterMethodScope(const std::string& method_name) {
 Scope* Scopes::GetCurrentScope() {
   assert(current_scope_index_ >= 0 && current_scope_index_ < scopes_.size());
   return scopes_[current_scope_index_];
+}
+
+Scope* Scopes::GetScopeFromIndex(size_t index) {
+  assert(scopes_.size() > index);
+  return scopes_[index];
 }
 
 size_t Scopes::VariableStaticBinding(const std::string& var_name) {

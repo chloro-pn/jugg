@@ -2,23 +2,28 @@
 #include <vector>
 #include <unordered_map>
 #include "ast_node.h"
+#include "variable.h"
 
 class Scope {
 public:
   int index_;
   int parent_index_;
   std::unordered_map<std::string, std::string> vars_;
+  std::unordered_map<std::string, Variable*> storage_;
 
   virtual ~Scope() = default;
-  virtual bool Find(const std::string& name) const = 0;
+  virtual int Find(const std::string& name) const = 0;
   virtual std::string Get(const std::string& name) = 0;
   virtual void Set(const std::string& var_name, const std::string& type_name) = 0;
 };
 
 class BlockScope : public Scope {
 public:
-  bool Find(const std::string& name) const override {
-    return vars_.find(name) != vars_.end();
+  int Find(const std::string& name) const override {
+    if (vars_.find(name) != vars_.end()) {
+      return index_;
+    }
+    return -1;
   }
 
   std::string Get(const std::string& name) override {
@@ -34,7 +39,7 @@ class FuncScope : public Scope {
 public:
   std::string func_name_;
   
-  bool Find(const  std::string& name) const override;
+  int Find(const  std::string& name) const override;
 
   std::string Get(const std::string& name) override;
 
@@ -45,7 +50,7 @@ class TypeScope : public Scope {
 public:
   std::string type_name_;
   
-  bool Find(const  std::string& name) const override;
+  int Find(const  std::string& name) const override;
 
   std::string Get(const std::string& name) override;
 
@@ -57,7 +62,7 @@ public:
   std::string type_name_;
   std::string method_name_;
   
-  bool Find(const  std::string& name) const override;
+  int Find(const  std::string& name) const override;
 
   std::string Get(const std::string& name) override;
 
@@ -72,6 +77,7 @@ public:
   void EnterTypeScope(const std::string&);
   void EnterMethodScope(const std::string&);
   Scope* GetCurrentScope();
+  Scope* GetScopeFromIndex(size_t index);
   size_t VariableStaticBinding(const std::string&);
   std::vector<VariableDefineStmt*>& GetGlobalVariableStmt() {
     return global_variable_stmt_;

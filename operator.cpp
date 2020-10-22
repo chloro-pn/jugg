@@ -4,6 +4,14 @@
 static void register_builtin_plus_operators(Operator& plus) {
   plus.static_maps_[{"string", "string"}] = "string";
   plus.static_maps_[{"int", "int"}] = "int";
+  plus.op_funcs_[{"int", "int"}] = [](Variable* v1, Variable* v2)->Variable* {
+    assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+    int64_t v = static_cast<IntVariable*>(v1)->val_ + static_cast<IntVariable*>(v2)->val_;
+    IntVariable* result = new IntVariable;
+    result->type_name_ = "int";
+    result->val_ = v;
+    return result;
+  };
   plus.static_maps_[{"double", "double" }] = "double";
   plus.static_maps_[{"int", "double"}] = "double";
   plus.static_maps_[{"double", "int"}] = "double";

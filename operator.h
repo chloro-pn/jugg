@@ -2,6 +2,7 @@
 #include <unordered_map>
 #include <functional>
 #include "scanner.h"
+#include "variable.h"
 
 struct Operator {
   int level_;
@@ -12,6 +13,7 @@ struct Operator {
     }
   };
   std::unordered_map<std::pair<std::string, std::string>, std::string, hash_for_maps> static_maps_;
+  std::unordered_map<std::pair<std::string, std::string>, std::function<Variable*(Variable*, Variable*)>, hash_for_maps> op_funcs_;
   Operator(int l, TOKEN t) : level_(l), token_(t) {
 
   }
@@ -23,6 +25,10 @@ struct Operator {
   std::string GetReturnType(const std::string& t1, const std::string& t2) {
     assert(static_maps_.find({ t1, t2 }) != static_maps_.end());
     return static_maps_[{t1, t2}];
+  }
+
+  bool FindOpFuncs(const std::string& t1, const std::string& t2) const {
+    return op_funcs_.find({ t1, t2 }) != op_funcs_.end();
   }
 };
 

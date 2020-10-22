@@ -6,6 +6,8 @@
 #include "scanner.h"
 #include "operator.h"
 #include "func.h"
+#include "variable.h"
+#include "interpreter.h"
 
 class AstNode {
  public:
@@ -16,6 +18,9 @@ class AstNode {
 class Expression : public AstNode {
  public:
   std::string type_name_;
+  virtual Variable* GetVariable() {
+    return nullptr;
+  }
 };
 
 // 目前不考虑数组类型的支持和实现
@@ -49,12 +54,27 @@ class BinaryExpr : public Expression {
   Expression* left_;
   Expression* right_;
   TOKEN operator_token_;
+
+  Variable* GetVariable() override {
+    Variable* v1 = left_->GetVariable();
+    Variable* v2 = right_->GetVariable();
+    //运算符可以处理这两个类型的变量
+    assert(OperatorSet::instance().Get(operator_token_).FindOpFuncs(v1->type_name_, v2->type_name_) == true);
+    Variable* result = OperatorSet::instance().Get(operator_token_).op_funcs_[{v1->type_name_, v2->type_name_}](v1, v2);
+    return result;
+  }
 };
 
 class IdExpr : public Expression {
  public:
   std::string id_name_;
+  std::string type_name_;
   size_t scope_index_;
+
+  Variable* GetVariable() override {
+    //解释器进行变量绑定并返回
+    return Interpreter::instance().FindVariableByIdexpr(this);
+  }
 };
 
 class StringIteralExpr : public Expression {
@@ -65,6 +85,13 @@ class StringIteralExpr : public Expression {
 class IntIteralExpr : public Expression {
 public:
   int64_t int_;
+
+  Variable* GetVariable() override {
+    IntVariable* v = new IntVariable;
+    v->type_name_ = "int";
+    v->val_ = int_;
+    return v;
+  }
 };
 
 class DoubleIteralExpr : public Expression {

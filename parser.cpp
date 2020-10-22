@@ -200,9 +200,10 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         else {
           assert(tokens[i].token == TOKEN::ID);
           IdExpr* idexpr = new IdExpr;
-          //通过id_name_和scope_index_可以在O(1)时间内定位到变量。
+          //通过id_name_, type_name_和scope_index_可以在O(1)时间内定位到变量。
           idexpr->id_name_ = tokens[i].get<std::string>();
           idexpr->scope_index_ = Scopes::instance().VariableStaticBinding(idexpr->id_name_);
+          idexpr->type_name_ = Scopes::instance().GetScopeFromIndex(idexpr->scope_index_)->Get(idexpr->id_name_);
           operands.push(idexpr);
         }
       }
@@ -494,6 +495,9 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
+
+  //记录type的scope_index_;
+  result.scope_index_ = Scopes::instance().GetCurrentScope()->index_;
 
   end = match_brace;
   ++begin;
