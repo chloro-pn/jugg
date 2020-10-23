@@ -18,22 +18,26 @@ class AstNode {
 class Expression : public AstNode {
  public:
   std::string type_name_;
-  virtual Variable* GetVariable() {
-    return nullptr;
-  }
+  virtual Variable* GetVariable() = 0;
 };
 
+/*
 // 目前不考虑数组类型的支持和实现
 class IndexExpr : public Expression {
  private:
   size_t token_index_;
   Expression* index_expr_;
 };
+*/
 
 class FuncCallExpr : public Expression {
  public:
   std::string func_name_;
   std::vector<Expression*> parameters_;
+  virtual Variable* GetVariable() override {
+    //解释器执行函数.
+    return nullptr;
+  }
 };
 
 class MethodCallExpr : public Expression {
@@ -41,12 +45,18 @@ public:
   std::string var_name_;
   std::string method_name_;
   std::vector<Expression*> parameters_;
+  virtual Variable* GetVariable() override {
+    return nullptr;
+  }
 };
 
 class DataMemberExpr : public Expression {
 public:
   std::string var_name_;
   std::string data_member_name_;
+  virtual Variable* GetVariable() override {
+    return nullptr;
+  }
 };
 
 class BinaryExpr : public Expression {
@@ -68,8 +78,6 @@ class BinaryExpr : public Expression {
 class IdExpr : public Expression {
  public:
   std::string id_name_;
-  std::string type_name_;
-  size_t scope_index_;
 
   Variable* GetVariable() override {
     //解释器进行变量绑定并返回
@@ -80,6 +88,13 @@ class IdExpr : public Expression {
 class StringIteralExpr : public Expression {
  public:
   std::string str_;
+
+  Variable* GetVariable() override {
+    StringVariable* v = new StringVariable;
+    v->type_name_ = "string";
+    v->val_ = str_;
+    return v;
+  }
 };
 
 class IntIteralExpr : public Expression {
@@ -97,16 +112,25 @@ public:
 class DoubleIteralExpr : public Expression {
 public:
   double d_;
+  virtual Variable* GetVariable() override {
+    return nullptr;
+  }
 };
 
 class BoolIteralExpr : public Expression {
 public:
   bool b_;
+  virtual Variable* GetVariable() override {
+    return nullptr;
+  }
 };
 
 class CharIteralExpr : public Expression {
 public:
   char c_;
+  virtual Variable* GetVariable() override {
+    return nullptr;
+  }
 };
 
 class Statement : public AstNode {

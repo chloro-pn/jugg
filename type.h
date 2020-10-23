@@ -12,20 +12,16 @@ public:
   std::string method_name_;
   std::unordered_map<std::string, std::string> parameter_type_list_;
   std::string return_type_;
-  std::size_t scope_index_;
   BlockStmt* block_;
 };
 
 //TODO
 class Type {
  public:
-  //内置类型不具有scope_index_
-  int scope_index_ = -1;
   std::string type_name_;
   // {var_name, type_name}
   std::unordered_map<std::string, std::string> datas_;
   std::unordered_map<std::string, Method> methods_;
-  std::function<Variable*(const std::vector<Variable*>& constructor)> creator_;
 
   explicit Type(const std::string& str = "") : type_name_(str) {
 
