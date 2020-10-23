@@ -365,9 +365,9 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
   }
 }
 
-std::unordered_map<std::string, std::string> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
+std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
-  std::unordered_map<std::string, std::string> result;
+  std::vector<std::pair<std::string, std::string>> result;
   size_t index = begin;
   while (true) {
     if (index == end) {
@@ -377,7 +377,7 @@ std::unordered_map<std::string, std::string> ParseParameterList(const std::vecto
     assert(tokens[index + 1].token == TOKEN::ID && tokens[index + 1].type == Token::TYPE::STRING);
     std::string type_name = tokens[index].get<std::string>();
     std::string var_name = tokens[index + 1].get<std::string>();
-    result[var_name] = type_name;
+    result.push_back({ var_name, type_name });
     index += 2;
     assert(tokens[index].token == TOKEN::COMMA || tokens[index].token == TOKEN::RIGHT_PARENTHESIS);
     if (tokens[index].token == TOKEN::COMMA) {
@@ -414,8 +414,6 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
-  //解释 : 这里主要是为了后续函数体表达式解析的变量绑定，因此在解析完成之前首先将含有参数列表的Func对象设置在FuncSet中。
-  FuncSet::instance().Set(result.func_name_, result);
   //函数体
   result.block_ = ParseBlockStmt(tokens, begin, match_brace);
   end = match_brace + 1;
@@ -486,8 +484,7 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
     ++begin;
     assert(tokens[begin].type == Token::TYPE::STRING);
     std::string var_name = tokens[begin].get<std::string>();
-    assert(result.FindData(var_name) == false);
-    result.datas_[var_name] = type_name;
+    result.RegisterData(var_name, type_name);
     ++begin;
     assert(tokens[begin].token == TOKEN::SEMICOLON);
     ++begin;
@@ -543,27 +540,25 @@ void Parse(const std::vector<Token>& tokens) {
       size_t next = 0;
       Func func = ParseFunc(tokens, index, next);
       index = next;
-      //assert(FuncSet::instance().Find(func.func_name_) == false);
-      FuncSet::instance().Set(func.func_name_, func);
+      FuncSet::instance().RegisterFunc(func);
     }
     else if (current_token == TOKEN::TYPE) {
       size_t next = 0;
       Type type = ParseType(tokens, index, next);
       index = next;
-      assert(TypeSet::instance().Find(type.type_name_) == false);
-      TypeSet::instance().Set(type.type_name_, type);
+      TypeSet::instance().RegisterType(type);
     }
     else if (current_token == TOKEN::METHOD) {
       size_t next = 0;
       Method method = ParseMethod(tokens, index, next);
       index = next;
       assert(TypeSet::instance().Find(method.type_name_) == true);
-      TypeSet::instance().Get(method.type_name_).methods_[method.method_name_] = method;
+      TypeSet::instance().Get(method.type_name_).RegisterMethod(method);
     }
     else {
       size_t next = 0;
       VariableDefineStmt* vs = ParseVariableDefinition(tokens, index, next);
-      //TODO:向解释器注册
+      Interpreter::instance().RegisterGlobalVariable(vs);
       index = next;
     }
   }

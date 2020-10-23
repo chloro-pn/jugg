@@ -20,3 +20,11 @@ Variable* Interpreter::FindVariableByIdexpr(const IdExpr* expr) {
 void Interpreter::Exec() {
 
 }
+
+void Interpreter::RegisterGlobalVariable(VariableDefineStmt* v) {
+  auto it = std::find_if(global_var_.begin(), global_var_.end(), [v](VariableDefineStmt* each)->bool {
+    return v->var_name_ == each->var_name_;
+  });
+  assert(it == global_var_.end());
+  global_var_.push_back(v);
+}
