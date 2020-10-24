@@ -134,12 +134,19 @@ public:
 };
 
 class Statement : public AstNode {
-
+public:
+  virtual void exec() = 0;
 };
 
 class BlockStmt : public Statement {
  public:
   std::vector<Statement*> block_;
+
+  void exec() override {
+    for (auto& each : block_) {
+      each->exec();
+    }
+  }
 };
 
 class ForStmt : public Statement {
@@ -148,6 +155,22 @@ class ForStmt : public Statement {
   Expression* check_;
   Expression* update_;
   BlockStmt* block_;
+
+  void exec() override {
+    init_->GetVariable();
+    while (true) {
+      Variable* v = check_->GetVariable();
+      assert(v->type_name_ == "bool");
+      bool check = static_cast<BoolVariable*>(v)->val_;
+      if (check == true) {
+        break;
+      }
+      delete v;
+      block_->exec();
+      v = update_->GetVariable();
+      delete v;
+    }
+  }
 };
 
 class IfStmt : public Statement {
@@ -155,12 +178,39 @@ class IfStmt : public Statement {
   Expression* check_;
   BlockStmt* if_block_;
   BlockStmt* else_block_;
+
+  void exec() override {
+    Variable* v = check_->GetVariable();
+    assert(v->type_name_ == "bool");
+    bool check = static_cast<BoolVariable*>(v)->val_;
+    if (check == true) {
+      if_block_->exec();
+    }
+    else if (else_block_ != nullptr) {
+      else_block_->exec();
+    }
+    delete v;
+  }
 };
 
 class WhileStmt : public Statement {
  public:
   Expression* check_;
   BlockStmt* block_;
+
+  void exec() override {
+    while (true) {
+      Variable* v = check_->GetVariable();
+      assert(v->type_name_ == "bool");
+      bool check = static_cast<BoolVariable*>(v)->val_;
+      if (check == true) {
+        delete v;
+        break;
+      }
+      block_->exec();
+      delete v;
+    }
+  }
 };
 
 class BreakStmt : public Statement {
@@ -180,6 +230,10 @@ class ReturnStmt : public Statement {
 class ExpressionStmt : public Statement {
  public:
   Expression* root_;
+
+  void exec() override {
+    delete root_->GetVariable();
+  }
 };
 
 class VariableDefineStmt : public Statement {
