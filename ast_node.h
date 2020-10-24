@@ -36,7 +36,15 @@ class FuncCallExpr : public Expression {
   std::vector<Expression*> parameters_;
   virtual Variable* GetVariable() override {
     //解释器执行函数.
-    return nullptr;
+    std::vector<Variable*> vars;
+    for (auto& each : parameters_) {
+      vars.push_back(each->GetVariable());
+    }
+    Variable* result = Interpreter::instance().CallFunc(func_name_, vars);
+    for (auto& each : vars) {
+      delete each;
+    }
+    return result;
   }
 };
 
@@ -55,7 +63,10 @@ public:
   std::string var_name_;
   std::string data_member_name_;
   virtual Variable* GetVariable() override {
-    return nullptr;
+    Variable* v = Interpreter::instance().FindVariableByName(var_name_);
+    Variable* v2 = v->FindMember(data_member_name_);
+    assert(v2 != nullptr);
+    return v2;
   }
 };
 
@@ -81,7 +92,7 @@ class IdExpr : public Expression {
 
   Variable* GetVariable() override {
     //解释器进行变量绑定并返回
-    return Interpreter::instance().FindVariableByIdexpr(this);
+    return Interpreter::instance().FindVariableByName(id_name_);
   }
 };
 
@@ -135,17 +146,22 @@ public:
 
 class Statement : public AstNode {
 public:
-  virtual void exec() = 0;
+  enum class State { Continue, Break, Next, Return };
+  virtual State exec() = 0;
 };
 
 class BlockStmt : public Statement {
  public:
   std::vector<Statement*> block_;
 
-  void exec() override {
+  State exec() override {
     for (auto& each : block_) {
-      each->exec();
+      State s = each->exec();
+      if (s != State::Next) {
+        return s;
+      }
     }
+    return State::Next;
   }
 };
 
@@ -156,20 +172,34 @@ class ForStmt : public Statement {
   Expression* update_;
   BlockStmt* block_;
 
-  void exec() override {
+  State exec() override {
     init_->GetVariable();
     while (true) {
       Variable* v = check_->GetVariable();
       assert(v->type_name_ == "bool");
       bool check = static_cast<BoolVariable*>(v)->val_;
+      if (v->cate_ == Variable::Category::Rvalue) {
+        delete v;
+      }
       if (check == true) {
         break;
       }
-      delete v;
-      block_->exec();
+      State s = block_->exec();
+      if (s == State::Continue) {
+        continue;
+      }
+      else if (s == State::Break) {
+        break;
+      }
+      else if (s == State::Return) {
+        return s;
+      }
       v = update_->GetVariable();
-      delete v;
+      if (v->cate_ == Variable::Category::Rvalue) {
+        delete v;
+      }
     }
+    return State::Next;
   }
 };
 
@@ -179,17 +209,26 @@ class IfStmt : public Statement {
   BlockStmt* if_block_;
   BlockStmt* else_block_;
 
-  void exec() override {
+  State exec() override {
     Variable* v = check_->GetVariable();
     assert(v->type_name_ == "bool");
     bool check = static_cast<BoolVariable*>(v)->val_;
+    if (v->cate_ == Variable::Category::Rvalue) {
+      delete v;
+    }
     if (check == true) {
-      if_block_->exec();
+      State s = if_block_->exec();
+      if (s != State::Next) {
+        return s;
+      }
     }
     else if (else_block_ != nullptr) {
-      else_block_->exec();
+      State s = else_block_->exec();
+      if (s != State::Next) {
+        return s;
+      }
     }
-    delete v;
+    return State::Next;
   }
 };
 
@@ -198,41 +237,68 @@ class WhileStmt : public Statement {
   Expression* check_;
   BlockStmt* block_;
 
-  void exec() override {
+  State exec() override {
     while (true) {
       Variable* v = check_->GetVariable();
       assert(v->type_name_ == "bool");
       bool check = static_cast<BoolVariable*>(v)->val_;
-      if (check == true) {
+      if (v->cate_ == Variable::Category::Rvalue) {
         delete v;
+      }
+      if (check == true) {
         break;
       }
-      block_->exec();
-      delete v;
+      State s = block_->exec();
+      if (s == State::Break) {
+        break;
+      }
+      else if (s == State::Continue) {
+        continue;
+      }
+      else if (s == State::Return) {
+        return s;
+      }
     }
+    return State::Next;
   }
 };
 
 class BreakStmt : public Statement {
-
+public:
+  State exec() override {
+    return State::Break;
+  }
 };
 
 class ContinueStmt : public Statement {
-
+public:
+  State exec() override {
+    return State::Continue;
+  }
 };
 
 //如果return_var_ == nullptr，则为空语句。
 class ReturnStmt : public Statement {
  public:
   Expression* return_var_;
+  State exec() override {
+    if (return_var_ != nullptr) {
+      //考虑如何将返回值设置在对应的函数/方法上下文中。
+    }
+    return State::Return;
+  }
 };
 
 class ExpressionStmt : public Statement {
  public:
   Expression* root_;
 
-  void exec() override {
-    delete root_->GetVariable();
+  State exec() override {
+    Variable* v = root_->GetVariable();
+    if (v->cate_ == Variable::Category::Rvalue) {
+      delete v;
+    }
+    return State::Next;
   }
 };
 
@@ -241,4 +307,18 @@ class VariableDefineStmt : public Statement {
   std::string type_name_;
   std::string var_name_;
   std::vector<Expression*> constructors_;
+
+  State exec() override {
+    //解释器在当前上下文定义变量
+    Variable* v = CreateVariable(type_name_);
+    v->type_name_ = type_name_;
+    v->id_name_ = var_name_;
+    //显式定义的变量都是左值。
+    v->cate_ = Variable::Category::Lvalue;
+    v->ConstructByExpression(constructors_);
+    auto& vars = Interpreter::instance().GetCurrentContext()->vars_;
+    assert(vars.find(var_name_) == vars.end());
+    vars[var_name_] = v;
+    return State::Next;
+  }
 };

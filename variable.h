@@ -7,10 +7,15 @@ class Variable {
 public:
   std::string type_name_;
   std::string id_name_;
-
+  enum class Category { Lvalue, Rvalue };
+  Category cate_;
   virtual void ConstructByExpression(const std::vector<Expression*>& constructors) = 0;
   virtual Variable* Copy() = 0;
-  virtual ~Variable() = 0;
+  virtual void Assign(Variable* v) = 0;
+  virtual Variable* FindMember(const std::string& name) = 0;
+  virtual ~Variable() {
+
+  }
 };
 
 class AbstractVariable : public Variable {
@@ -19,6 +24,8 @@ public:
 
   void ConstructByExpression(const std::vector<Expression*>&) override;
   Variable* Copy() override;
+  void Assign(Variable*) override;
+  Variable* FindMember(const std::string& name) override;
   ~AbstractVariable();
 };
 
@@ -27,6 +34,8 @@ public:
   std::string val_;
   void ConstructByExpression(const std::vector<Expression*>&) override;
   Variable* Copy() override;
+  void Assign(Variable*) override;
+  Variable* FindMember(const std::string& name) override;
   ~StringVariable();
 };
 
@@ -35,6 +44,8 @@ public:
   int64_t val_;
   void ConstructByExpression(const std::vector<Expression*>&) override;
   Variable* Copy() override;
+  void Assign(Variable*) override;
+  Variable* FindMember(const std::string& name) override;
   ~IntVariable();
 };
 
@@ -43,6 +54,8 @@ public:
   bool val_;
   void ConstructByExpression(const std::vector<Expression*>&) override;
   Variable* Copy() override;
+  void Assign(Variable*) override;
+  Variable* FindMember(const std::string& name) override;
   ~BoolVariable();
 };
 

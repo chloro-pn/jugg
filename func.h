@@ -14,12 +14,6 @@ class Func {
   BlockStmt* block_;
 };
 
-class FuncContext {
- public:
-  std::string func_name_;
-  std::vector<std::pair<std::string, Variable*>> param_;
-};
-
 class FuncSet {
  public:
   static FuncSet& instance();

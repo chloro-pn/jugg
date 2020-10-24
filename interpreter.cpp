@@ -11,10 +11,19 @@ Interpreter& Interpreter::instance() {
 
 //初始情况下在全局作用域。
 Interpreter::Interpreter() {
-  flag_.push(0);
+  context_.push(new BlockContext);
 }
 
-Variable* Interpreter::FindVariableByIdexpr(const IdExpr* expr) {
+Variable* Interpreter::FindVariableByName(const std::string& name) {
+  std::stack<Context*> c = context_;
+  while (c.empty() == false) {
+    Context* cur = c.top();
+    c.pop();
+    Variable* v = cur->GetVariableByName(name);
+    if (v != nullptr) {
+      return v;
+    }
+  }
   return nullptr;
 }
 
@@ -24,23 +33,35 @@ void Interpreter::Exec() {
     Variable* v = CreateVariable(each->type_name_);
     v->id_name_ = each->var_name_;
     v->type_name_ = each->type_name_;
+    v->cate_ = Variable::Category::Lvalue;
     v->ConstructByExpression(each->constructors_);
+    GetCurrentContext()->vars_[v->id_name_] = v;
   }
-  assert(FuncSet::instance().Find("main") == true);
-  Func& main = FuncSet::instance().Get("main");
-  
+  CallFunc("main", {});
 }
 
-void Interpreter::CallFunc(const std::string& func_name) {
+Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<Variable*>& variables) {
   assert(FuncSet::instance().Find(func_name) == true);
-  Func& main = FuncSet::instance().Get(func_name);
-  FuncContext fc;
-  fc.func_name_ = func_name;
+  Func& func = FuncSet::instance().Get(func_name);
+  FuncContext* fc = new FuncContext;
+  fc->func_name_ = func_name;
   //main函数没有参数传入
-  assert(main.parameter_type_list_.size() == 0);
-  func_.push(fc);
-  flag_.push(1);
-  main.block_->exec();
+  assert(func.parameter_type_list_.size() == variables.size());
+  for (int i = 0; i < variables.size(); ++i) {
+    assert(func.parameter_type_list_[i].second == variables[i]->type_name_);
+    fc->vars_[func.parameter_type_list_[i].first] = variables[i]->Copy();
+  }
+  //这里需要一种机制，将fc的return_var_注册给func的block语句中的return语句。
+  context_.push(fc);
+  Statement::State s = func.block_->exec();
+  assert(s == Statement::State::Return);
+  for (auto& each : fc->vars_) {
+    delete each.second;
+  }
+  context_.pop();
+  //函数返回值是一个右值。
+  fc->return_var_->cate_ = Variable::Category::Rvalue;
+  return fc->return_var_;
 }
 
 void Interpreter::RegisterGlobalVariable(VariableDefineStmt* v) {

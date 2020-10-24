@@ -10,6 +10,7 @@ static void register_builtin_plus_operators(Operator& plus) {
     IntVariable* result = new IntVariable;
     result->type_name_ = "int";
     result->val_ = v;
+    result->cate_ = Variable::Category::Rvalue;
     return result;
   };
   plus.static_maps_[{"double", "double" }] = "double";
@@ -79,6 +80,10 @@ static void register_builtin_operators(std::unordered_map<TOKEN, Operator>& os) 
   os[TOKEN::NOT] = n;
 
   Operator assign(7, TOKEN::ASSIGN);
+  assign.op_funcs_[{"int", "int"}] = [](Variable* v1, Variable* v2)->Variable* {
+    v1->Assign(v2);
+    return v1;
+  };
   Operator compare(4, TOKEN::COMPARE);
   Operator greater_than(3, TOKEN::GREATER_THAN);
   Operator less_than(3, TOKEN::LESS_THAN);

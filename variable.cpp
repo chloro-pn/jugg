@@ -34,6 +34,22 @@ Variable* AbstractVariable::Copy() {
   return result;
 }
 
+void AbstractVariable::Assign(Variable* v) {
+  assert(type_name_ == v->type_name_);
+  for (int i = 0; i < members_.size(); ++i) {
+    members_[i]->Assign(static_cast<AbstractVariable*>(v)->members_[i]);
+  }
+}
+
+Variable* AbstractVariable::FindMember(const std::string& name) {
+  for (auto& each : members_) {
+    if (each->id_name_ == name) {
+      return each;
+    }
+  }
+  return nullptr;
+}
+
 AbstractVariable::~AbstractVariable() {
   for (auto& each : members_) {
     delete each;
@@ -56,6 +72,15 @@ Variable* StringVariable::Copy() {
   return result;
 }
 
+void StringVariable::Assign(Variable* v) {
+  assert("string" == v->type_name_);
+  val_ = static_cast<StringVariable*>(v)->val_;
+}
+
+Variable* StringVariable::FindMember(const std::string& name) {
+  return nullptr;
+}
+
 StringVariable::~StringVariable() {
   ;
 }
@@ -74,6 +99,15 @@ Variable* IntVariable::Copy() {
   result->id_name_ = id_name_;
   result->val_ = static_cast<IntVariable*>(this)->val_;
   return result;
+}
+
+void IntVariable::Assign(Variable* v) {
+  assert("int" == v->type_name_);
+  val_ = static_cast<IntVariable*>(v)->val_;
+}
+
+Variable* IntVariable::FindMember(const std::string& name) {
+  return nullptr;
 }
 
 IntVariable::~IntVariable() {
