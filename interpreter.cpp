@@ -37,7 +37,14 @@ void Interpreter::Exec() {
     v->ConstructByExpression(each->constructors_);
     GetCurrentContext()->vars_[v->id_name_] = v;
   }
-  CallFunc("main", {});
+  Variable* v = CallFunc("main", {});
+  assert(v->type_name_ == "void");
+  delete v;
+  assert(context_.size() == 1);
+  //全局变量的析构
+  for (auto& each : GetCurrentContext()->vars_) {
+    delete each.second;
+  }
 }
 
 Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<Variable*>& variables) {
@@ -63,9 +70,6 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   }
   context_.pop();
   //函数返回值是一个右值。
-  if (fc->return_var_ != nullptr) {
-    fc->return_var_->cate_ = Variable::Category::Rvalue;
-  }
   return fc->return_var_;
 }
 

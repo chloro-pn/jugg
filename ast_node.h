@@ -319,7 +319,8 @@ class ReturnStmt : public Statement {
       }
     }
     else {
-      *return_var_ = nullptr;
+      *return_var_ = new VoidVariable;
+      (*return_var_)->type_name_ = "void";
     }
     return State::Return;
   }

@@ -18,6 +18,14 @@ public:
   }
 };
 
+class VoidVariable : public Variable {
+  void ConstructByExpression(const std::vector<Expression*>&) override {};
+  Variable* Copy() override { return nullptr; };
+  void Assign(Variable*) override {};
+  Variable* FindMember(const std::string& name) override { return nullptr; };
+  ~VoidVariable() {};
+};
+
 class AbstractVariable : public Variable {
 public:
   std::vector<Variable*> members_;
