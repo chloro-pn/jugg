@@ -37,7 +37,13 @@ class FuncCallExpr : public Expression {
     //½âÊÍÆ÷Ö´ÐÐº¯Êý.
     std::vector<Variable*> vars;
     for (auto& each : parameters_) {
-      vars.push_back(each->GetVariable());
+      Variable* v = each->GetVariable();
+      if (v->cate_ == Variable::Category::Lvalue) {
+        vars.push_back(v->Copy());
+      }
+      else {
+        vars.push_back(each->GetVariable());
+      }
     }
     Variable* result = Interpreter::instance().CallFunc(func_name_, vars);
     for (auto& each : vars) {
