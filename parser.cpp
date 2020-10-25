@@ -44,10 +44,10 @@ FindNext(FindNextSemicolon, TOKEN::SEMICOLON);
 
 FindNext(FindNextComma, TOKEN::COMMA);
 
-size_t FindNextCommaOrRightParenthesis(const std::vector<Token>& tokens, size_t begin) {
+size_t FindNextCommaOrEnd(const std::vector<Token>& tokens, size_t begin, size_t end) {
   size_t index = begin;
   while (index < tokens.size()) {
-    if (tokens[index].token == TOKEN::COMMA || tokens[index].token == TOKEN::RIGHT_PARENTHESIS) {
+    if (tokens[index].token == TOKEN::COMMA || index == end) {
       return index;
     }
     ++index;
@@ -76,17 +76,19 @@ FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, 
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
-  while (true) {
-    if (begin == end) {
-      break;
+  if (begin + 1 != end) {
+    while (true) {
+      if (begin == end) {
+        break;
+      }
+      ++begin;
+      size_t next = FindNextCommaOrEnd(tokens, begin, end);
+      // func_name(xxxxx, xxxxx, xxxx)
+      //           |    |
+      //         begin end
+      result->parameters_.push_back(ParseExpression(tokens, begin, next));
+      begin = next;
     }
-    ++begin;
-    size_t next = FindNextCommaOrRightParenthesis(tokens, begin);
-    // func_name(xxxxx, xxxxx, xxxx)
-    //           |    |
-    //         begin end
-    result->parameters_.push_back(ParseExpression(tokens, begin, next));
-    begin = next;
   }
   return result;
 }
@@ -105,17 +107,19 @@ MethodCallExpr* ParseMethodCallExpr(const std::vector<Token>& tokens, size_t beg
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
-  while (true) {
-    if (begin == end) {
-      break;
+  if (begin + 1 != end) {
+    while (true) {
+      if (begin == end) {
+        break;
+      }
+      ++begin;
+      size_t next = FindNextCommaOrEnd(tokens, begin, end);
+      // func_name(xxxxx, xxxxx, xxxx)
+      //           |    |
+      //         begin end
+      result->parameters_.push_back(ParseExpression(tokens, begin, next));
+      begin = next;
     }
-    ++begin;
-    size_t next = FindNextCommaOrRightParenthesis(tokens, begin);
-    // func_name(xxxxx, xxxxx, xxxx)
-    //           |    |
-    //         begin end
-    result->parameters_.push_back(ParseExpression(tokens, begin, next));
-    begin = next;
   }
   return result;
 }
@@ -325,14 +329,15 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
   }
   else if (tokens[begin].token == TOKEN::RETURN) {
     ReturnStmt* result = new ReturnStmt;
+    result->return_var_ = nullptr;
     ++begin;
     if (tokens[begin].token != TOKEN::SEMICOLON) {
       size_t next = FindNextSemicolon(tokens, begin);
-      result->return_var_ = ParseExpression(tokens, begin, next);
+      result->return_exp_ = ParseExpression(tokens, begin, next);
       end = next + 1;
     }
     else {
-      result->return_var_ = nullptr;
+      result->return_exp_ = nullptr;
       end = begin + 1;
     }
     return result;
@@ -349,7 +354,7 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     end = begin + 1;
     return new BreakStmt;
   }
-  else if (tokens[begin].token == TOKEN::ID && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true) {
+  else if (tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true) {
     //变量定义语句
     VariableDefineStmt* v = ParseVariableDefinition(tokens, begin, end);
     return v;
@@ -368,6 +373,9 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
 std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
   std::vector<std::pair<std::string, std::string>> result;
+  if (begin + 1 == end) {
+    return result;
+  }
   size_t index = begin;
   while (true) {
     if (index == end) {
@@ -511,17 +519,19 @@ VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, si
   }
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   size_t match_parent = FindMatchedParenthesis(tokens, begin);
-  while (true) {
-    if (begin == match_parent) {
-      break;
+  if (begin + 1 != match_parent) {
+    while (true) {
+      if (begin == match_parent) {
+        break;
+      }
+      ++begin;
+      size_t next = FindNextCommaOrEnd(tokens, begin, match_parent);
+      // variable_name(xxxxx, xxxxx, xxxx)
+      //           |    |
+      //         begin end
+      result->constructors_.push_back(ParseExpression(tokens, begin, next));
+      begin = next;
     }
-    ++begin;
-    size_t next = FindNextCommaOrRightParenthesis(tokens, begin);
-    // variable_name(xxxxx, xxxxx, xxxx)
-    //           |    |
-    //         begin end
-    result->constructors_.push_back(ParseExpression(tokens, begin, next));
-    begin = next;
   }
   ++begin;
   assert(tokens[begin].token == TOKEN::SEMICOLON);

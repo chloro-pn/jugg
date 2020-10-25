@@ -17,7 +17,6 @@ class AstNode {
 // 每个表达式必将返回一个类型的值
 class Expression : public AstNode {
  public:
-  std::string type_name_;
   virtual Variable* GetVariable() = 0;
 };
 
@@ -42,7 +41,9 @@ class FuncCallExpr : public Expression {
     }
     Variable* result = Interpreter::instance().CallFunc(func_name_, vars);
     for (auto& each : vars) {
-      delete each;
+      if (each->cate_ == Variable::Category::Rvalue) {
+        delete each;
+      }
     }
     return result;
   }
@@ -82,6 +83,12 @@ class BinaryExpr : public Expression {
     //运算符可以处理这两个类型的变量
     assert(OperatorSet::instance().Get(operator_token_).FindOpFuncs(v1->type_name_, v2->type_name_) == true);
     Variable* result = OperatorSet::instance().Get(operator_token_).op_funcs_[{v1->type_name_, v2->type_name_}](v1, v2);
+    if (v1->cate_ == Variable::Category::Rvalue) {
+      delete v1;
+    }
+    if (v2->cate_ == Variable::Category::Rvalue) {
+      delete v2;
+    }
     return result;
   }
 };
@@ -104,6 +111,7 @@ class StringIteralExpr : public Expression {
     StringVariable* v = new StringVariable;
     v->type_name_ = "string";
     v->val_ = str_;
+    v->cate_ = Variable::Category::Rvalue;
     return v;
   }
 };
@@ -116,6 +124,7 @@ public:
     IntVariable* v = new IntVariable;
     v->type_name_ = "int";
     v->val_ = int_;
+    v->cate_ = Variable::Category::Rvalue;
     return v;
   }
 };
@@ -148,6 +157,10 @@ class Statement : public AstNode {
 public:
   enum class State { Continue, Break, Next, Return };
   virtual State exec() = 0;
+  // 这个函数为了向return语句注册函数返回值
+  virtual void RegisterReturnVar(Variable*& rv) {
+    ;
+  }
 };
 
 class BlockStmt : public Statement {
@@ -162,6 +175,12 @@ class BlockStmt : public Statement {
       }
     }
     return State::Next;
+  }
+
+  void RegisterReturnVar(Variable*& rv) override {
+    for (auto& each : block_) {
+      each->RegisterReturnVar(rv);
+    }
   }
 };
 
@@ -280,10 +299,27 @@ public:
 //如果return_var_ == nullptr，则为空语句。
 class ReturnStmt : public Statement {
  public:
-  Expression* return_var_;
+  Expression* return_exp_;
+  Variable** return_var_;
+
+  void RegisterReturnVar(Variable*& rv) override {
+    return_var_ = &rv;
+  }
+
   State exec() override {
-    if (return_var_ != nullptr) {
-      //考虑如何将返回值设置在对应的函数/方法上下文中。
+    if (return_exp_ != nullptr) {
+      Variable* tmp = return_exp_->GetVariable();
+      if (tmp->cate_ == Variable::Category::Lvalue) {
+        *return_var_ = tmp->Copy();
+        (*return_var_)->cate_ = Variable::Category::Rvalue;
+      }
+      else {
+        //返回的就是右值，故不需要copy，直接使用即可。
+        *return_var_ = tmp;
+      }
+    }
+    else {
+      *return_var_ = nullptr;
     }
     return State::Return;
   }

@@ -49,9 +49,12 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   assert(func.parameter_type_list_.size() == variables.size());
   for (int i = 0; i < variables.size(); ++i) {
     assert(func.parameter_type_list_[i].second == variables[i]->type_name_);
+    //注意应该使用函数参数的名字。
     fc->vars_[func.parameter_type_list_[i].first] = variables[i]->Copy();
+    fc->vars_[func.parameter_type_list_[i].first]->id_name_ = func.parameter_type_list_[i].first;
   }
   //这里需要一种机制，将fc的return_var_注册给func的block语句中的return语句。
+  func.block_->RegisterReturnVar(fc->return_var_);
   context_.push(fc);
   Statement::State s = func.block_->exec();
   assert(s == Statement::State::Return);
@@ -60,7 +63,9 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   }
   context_.pop();
   //函数返回值是一个右值。
-  fc->return_var_->cate_ = Variable::Category::Rvalue;
+  if (fc->return_var_ != nullptr) {
+    fc->return_var_->cate_ = Variable::Category::Rvalue;
+  }
   return fc->return_var_;
 }
 
