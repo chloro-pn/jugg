@@ -39,10 +39,13 @@ class FuncCallExpr : public Expression {
     for (auto& each : parameters_) {
       Variable* v = each->GetVariable();
       if (v->cate_ == Variable::Category::Lvalue) {
-        vars.push_back(v->Copy());
+        Variable* tmp = v->Copy();
+        tmp->cate_ = Variable::Category::Lvalue;
+        vars.push_back(tmp);
       }
       else {
-        vars.push_back(each->GetVariable());
+        v->cate_ = Variable::Category::Lvalue;
+        vars.push_back(v);
       }
     }
     Variable* result = Interpreter::instance().CallFunc(func_name_, vars);
@@ -61,7 +64,27 @@ public:
   std::string method_name_;
   std::vector<Expression*> parameters_;
   virtual Variable* GetVariable() override {
-    return nullptr;
+    Variable* obj = Interpreter::instance().FindVariableByName(var_name_);
+    std::vector<Variable*> vars;
+    for (auto& each : parameters_) {
+      Variable* v = each->GetVariable();
+      if (v->cate_ == Variable::Category::Lvalue) {
+        Variable* tmp = v->Copy();
+        tmp->cate_ = Variable::Category::Lvalue;
+        vars.push_back(tmp);
+      }
+      else {
+        v->cate_ = Variable::Category::Lvalue;
+        vars.push_back(v);
+      }
+    }
+    Variable* result = Interpreter::instance().CallMethod(obj, method_name_, vars);
+    for (auto& each : vars) {
+      if (each->cate_ == Variable::Category::Rvalue) {
+        delete each;
+      }
+    }
+    return result;
   }
 };
 
@@ -174,12 +197,15 @@ class BlockStmt : public Statement {
   std::vector<Statement*> block_;
 
   State exec() override {
+    BlockContext* bc = new BlockContext;
+    Interpreter::instance().Enter(bc);
     for (auto& each : block_) {
       State s = each->exec();
       if (s != State::Next) {
         return s;
       }
     }
+    Interpreter::instance().Leave();
     return State::Next;
   }
 
@@ -187,6 +213,19 @@ class BlockStmt : public Statement {
     for (auto& each : block_) {
       each->RegisterReturnVar(rv);
     }
+  }
+};
+
+class FMBlockStmt : public BlockStmt {
+ public:
+  State exec() override {
+    for (auto& each : this->block_) {
+      State s = each->exec();
+      if (s != State::Next) {
+        return s;
+      }
+    }
+    return State::Next;
   }
 };
 

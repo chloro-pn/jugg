@@ -73,6 +73,33 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   return fc->return_var_;
 }
 
+Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name, const std::vector<Variable*>& variables) {
+  Type& type = TypeSet::instance().Get(obj->type_name_);
+  assert(type.methods_.find(method_name) != type.methods_.end());
+  Method& method = type.methods_[method_name];
+  MethodContext* mc = new MethodContext;
+  mc->method_name_ = method_name;
+  mc->obj_ = obj;
+  assert(method.parameter_type_list_.size() == variables.size());
+  for (int i = 0; i < variables.size(); ++i) {
+    assert(method.parameter_type_list_[i].second == variables[i]->type_name_);
+    //注意应该使用函数参数的名字。
+    mc->vars_[method.parameter_type_list_[i].first] = variables[i]->Copy();
+    mc->vars_[method.parameter_type_list_[i].first]->id_name_ = method.parameter_type_list_[i].first;
+  }
+  //这里需要一种机制，将fc的return_var_注册给func的block语句中的return语句。
+  method.block_->RegisterReturnVar(mc->return_var_);
+  context_.push(mc);
+  Statement::State s = method.block_->exec();
+  assert(s == Statement::State::Return);
+  for (auto& each : mc->vars_) {
+    delete each.second;
+  }
+  context_.pop();
+  //函数返回值是一个右值。
+  return mc->return_var_;
+}
+
 void Interpreter::RegisterGlobalVariable(VariableDefineStmt* v) {
   auto it = std::find_if(global_var_.begin(), global_var_.end(), [v](VariableDefineStmt* each)->bool {
     return v->var_name_ == each->var_name_;

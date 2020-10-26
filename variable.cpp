@@ -21,9 +21,12 @@ void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs)
     assert(v->type_name_ == type.datas_[index].second);
     v->id_name_ = type.datas_[index].first;
     if (v->cate_ == Variable::Category::Lvalue) {
-      members_.push_back(v->Copy());
+      Variable* tmp = v->Copy();
+      tmp->cate_ = Variable::Category::Rvalue;
+      members_.push_back(tmp);
     }
     else {
+      v->cate_ = Variable::Category::Rvalue;
       members_.push_back(v);
     }
   }

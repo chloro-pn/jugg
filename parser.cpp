@@ -258,6 +258,22 @@ BlockStmt* ParseBlockStmt(const std::vector<Token>& tokens, size_t begin, size_t
   return result;
 }
 
+FMBlockStmt* ParseFMBlockStmt(const std::vector<Token>& tokens, size_t begin, size_t end) {
+  FMBlockStmt* result = new FMBlockStmt();
+  assert(tokens[begin].token == TOKEN::LEFT_BRACE);
+  assert(tokens[end].token == TOKEN::RIGHT_BRACE);
+  ++begin;
+  while (true) {
+    if (begin == end) {
+      break;
+    }
+    size_t next = 0;
+    result->block_.push_back(ParseStatement(tokens, begin, next));
+    begin = next;
+  }
+  return result;
+}
+
 //解析从begin处开始的一条语句，返回该语句对应的对象指针，并将end修改为该语句最后一个token的下一个token索引值。
 Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   Statement* result = nullptr;
@@ -423,7 +439,7 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
   //函数体
-  result.block_ = ParseBlockStmt(tokens, begin, match_brace);
+  result.block_ = ParseFMBlockStmt(tokens, begin, match_brace);
   end = match_brace + 1;
   return result;
 }
@@ -460,7 +476,7 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
   //函数体
-  result.block_ = ParseBlockStmt(tokens, begin, match_brace);
+  result.block_ = ParseFMBlockStmt(tokens, begin, match_brace);
   end = match_brace + 1;
   return result;
 }

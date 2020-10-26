@@ -28,6 +28,8 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
 
 BlockStmt* ParseBlockStmt(const std::vector<Token>& tokens, size_t begin, size_t end);
 
+FMBlockStmt* ParseFMBlockStmt(const std::vector<Token>& tokens, size_t begin, size_t end);
+
 // 解析从begin处开始的一条语句，返回该语句对应的对象指针，并将end修改为该语句最后一个token的下一个token索引值。
 Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t& end);
 
