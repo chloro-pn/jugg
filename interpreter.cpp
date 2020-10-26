@@ -33,8 +33,7 @@ void Interpreter::Exec() {
     Variable* v = CreateVariable(each->type_name_);
     v->id_name_ = each->var_name_;
     v->type_name_ = each->type_name_;
-    v->cate_ = Variable::Category::Lvalue;
-    v->ConstructByExpression(each->constructors_);
+    v->ConstructByExpression(each->constructors_, Variable::Category::Lvalue);
     GetCurrentContext()->vars_[v->id_name_] = v;
   }
   Variable* v = CallFunc("main", {});

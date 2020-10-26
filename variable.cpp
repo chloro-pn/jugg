@@ -13,7 +13,7 @@ Variable* CreateVariable(const std::string& type_name) {
 }
 
 //type_name_和id_name_已经被设置
-void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs) {
+void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
   Type& type = TypeSet::instance().Get(type_name_);
   assert(type.datas_.size() == cs.size());
   for (size_t index = 0; index < cs.size(); ++index) {
@@ -22,14 +22,15 @@ void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs)
     v->id_name_ = type.datas_[index].first;
     if (v->cate_ == Variable::Category::Lvalue) {
       Variable* tmp = v->Copy();
-      tmp->cate_ = Variable::Category::Rvalue;
+      tmp->cate_ = cate;
       members_.push_back(tmp);
     }
     else {
-      v->cate_ = Variable::Category::Rvalue;
+      v->cate_ = cate;
       members_.push_back(v);
     }
   }
+  cate_ = cate;
 }
 
 Variable* AbstractVariable::Copy() {
@@ -64,11 +65,12 @@ AbstractVariable::~AbstractVariable() {
   }
 }
 
-void StringVariable::ConstructByExpression(const std::vector<Expression*>& cs) {
+void StringVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
   assert(v->type_name_ == "string");
   val_ = static_cast<StringVariable*>(v)->val_;
+  cate_ = cate;
   delete v;
 }
 
@@ -93,11 +95,12 @@ StringVariable::~StringVariable() {
   ;
 }
 
-void IntVariable::ConstructByExpression(const std::vector<Expression*>& cs) {
+void IntVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
   assert(v->type_name_ == "int");
   val_ = static_cast<IntVariable*>(v)->val_;
+  cate_ = cate;
   delete v;
 }
 

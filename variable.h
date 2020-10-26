@@ -9,7 +9,7 @@ public:
   std::string id_name_;
   enum class Category { Lvalue, Rvalue };
   Category cate_;
-  virtual void ConstructByExpression(const std::vector<Expression*>& constructors) = 0;
+  virtual void ConstructByExpression(const std::vector<Expression*>& constructors, Variable::Category cate) = 0;
   virtual Variable* Copy() = 0;
   virtual void Assign(Variable* v) = 0;
   virtual Variable* FindMember(const std::string& name) = 0;
@@ -19,7 +19,7 @@ public:
 };
 
 class VoidVariable : public Variable {
-  void ConstructByExpression(const std::vector<Expression*>&) override {};
+  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override {};
   Variable* Copy() override { return nullptr; };
   void Assign(Variable*) override {};
   Variable* FindMember(const std::string& name) override { return nullptr; };
@@ -30,7 +30,7 @@ class AbstractVariable : public Variable {
 public:
   std::vector<Variable*> members_;
 
-  void ConstructByExpression(const std::vector<Expression*>&) override;
+  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
   Variable* Copy() override;
   void Assign(Variable*) override;
   Variable* FindMember(const std::string& name) override;
@@ -40,7 +40,7 @@ public:
 class StringVariable : public Variable {
 public:
   std::string val_;
-  void ConstructByExpression(const std::vector<Expression*>&) override;
+  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
   Variable* Copy() override;
   void Assign(Variable*) override;
   Variable* FindMember(const std::string& name) override;
@@ -50,7 +50,7 @@ public:
 class IntVariable : public Variable {
 public:
   int64_t val_;
-  void ConstructByExpression(const std::vector<Expression*>&) override;
+  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
   Variable* Copy() override;
   void Assign(Variable*) override;
   Variable* FindMember(const std::string& name) override;
@@ -60,7 +60,7 @@ public:
 class BoolVariable : public Variable {
 public:
   bool val_;
-  void ConstructByExpression(const std::vector<Expression*>&) override;
+  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
   Variable* Copy() override;
   void Assign(Variable*) override;
   Variable* FindMember(const std::string& name) override;

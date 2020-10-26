@@ -50,9 +50,7 @@ class FuncCallExpr : public Expression {
     }
     Variable* result = Interpreter::instance().CallFunc(func_name_, vars);
     for (auto& each : vars) {
-      if (each->cate_ == Variable::Category::Rvalue) {
-        delete each;
-      }
+      delete each;
     }
     return result;
   }
@@ -80,9 +78,7 @@ public:
     }
     Variable* result = Interpreter::instance().CallMethod(obj, method_name_, vars);
     for (auto& each : vars) {
-      if (each->cate_ == Variable::Category::Rvalue) {
-        delete each;
-      }
+      delete each;
     }
     return result;
   }
@@ -396,8 +392,7 @@ class VariableDefineStmt : public Statement {
     v->type_name_ = type_name_;
     v->id_name_ = var_name_;
     //显式定义的变量都是左值。
-    v->cate_ = Variable::Category::Lvalue;
-    v->ConstructByExpression(constructors_);
+    v->ConstructByExpression(constructors_, Variable::Category::Lvalue);
     auto& vars = Interpreter::instance().GetCurrentContext()->vars_;
     assert(vars.find(var_name_) == vars.end());
     vars[var_name_] = v;
