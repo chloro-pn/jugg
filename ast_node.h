@@ -198,6 +198,7 @@ class BlockStmt : public Statement {
     for (auto& each : block_) {
       State s = each->exec();
       if (s != State::Next) {
+        Interpreter::instance().Leave();
         return s;
       }
     }
