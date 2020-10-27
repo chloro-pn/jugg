@@ -72,7 +72,7 @@ FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, 
   assert(tokens[begin].type == Token::TYPE::STRING);
   result->func_name_ = tokens[begin].get<std::string>();
   //确保当前函数可以被找到，即已经在前面解析过程中被定义。
-  assert(FuncSet::instance().Find(result->func_name_) == true);
+  assert(FuncSet::instance().Find(result->func_name_) == true || Interpreter::instance().FindInnerFunc(result->func_name_) == true);
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
@@ -146,7 +146,9 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
     assert(current_token != TOKEN::RIGHT_PARENTHESIS);
     if (OperatorSet::instance().Find(current_token) == false) {
       //函数调用表达式
-      if (tokens[i].type == Token::TYPE::STRING && FuncSet::instance().Find(tokens[i].get<std::string>()) == true) {
+      if (tokens[i].type == Token::TYPE::STRING && (
+        FuncSet::instance().Find(tokens[i].get<std::string>()) == true || 
+        Interpreter::instance().FindInnerFunc(tokens[i].get<std::string>()) == true)) {
         assert(tokens[i + 1].token == TOKEN::LEFT_PARENTHESIS);
         size_t match_parent = FindMatchedParenthesis(tokens, i + 1);
         operands.push(ParseFuncCallExpr(tokens, i, match_parent));

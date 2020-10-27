@@ -3,6 +3,7 @@
 #include "ast_node.h"
 #include "variable.h"
 #include <algorithm>
+#include <iostream>
 
 Interpreter& Interpreter::instance() {
   static Interpreter obj;
@@ -12,6 +13,21 @@ Interpreter& Interpreter::instance() {
 //初始情况下在全局作用域。
 Interpreter::Interpreter() {
   context_.push(new BlockContext);
+  inner_func_["print"] = [](FuncContext* fc)->void {
+    fc->return_var_ = new VoidVariable;
+    fc->return_var_->id_name_ = "void";
+    for (auto& each : fc->vars_) {
+      if (each.second->type_name_ == "int") {
+        std::cout << static_cast<IntVariable*>(each.second)->val_;
+      }
+      else if (each.second->type_name_ == "string") {
+        std::cout << static_cast<StringVariable*>(each.second)->val_;
+      }
+      else {
+        assert(false);
+      }
+    }
+  };
 }
 
 Variable* Interpreter::FindVariableByName(const std::string& name) {
@@ -48,6 +64,21 @@ void Interpreter::Exec() {
 
 // variables已经是函数作用域内的变量
 Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<Variable*>& variables) {
+  if (inner_func_.find(func_name) != inner_func_.end()) {
+    FuncContext* fc = new FuncContext;
+    fc->func_name_ = func_name;
+    //main函数没有参数传入
+    for (int i = 0; i < variables.size(); ++i) {
+      fc->vars_[variables[i]->id_name_] = variables[i];
+    }
+    inner_func_[func_name](fc);
+    for (auto& each : fc->vars_) {
+      delete each.second;
+    }
+    Variable* result = fc->return_var_;
+    delete fc;
+    return result;
+  }
   assert(FuncSet::instance().Find(func_name) == true);
   Func& func = FuncSet::instance().Get(func_name);
   FuncContext* fc = new FuncContext;
@@ -68,9 +99,11 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   for (auto& each : fc->vars_) {
     delete each.second;
   }
+  Variable* result = fc->return_var_;
   context_.pop();
+  delete fc;
   //函数返回值是一个右值。
-  return fc->return_var_;
+  return result;
 }
 
 Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name, const std::vector<Variable*>& variables) {
@@ -95,9 +128,11 @@ Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name,
   for (auto& each : mc->vars_) {
     delete each.second;
   }
+  Variable* result = mc->return_var_;
   context_.pop();
+  delete mc;
   //函数返回值是一个右值。
-  return mc->return_var_;
+  return result;
 }
 
 void Interpreter::RegisterGlobalVariable(VariableDefineStmt* v) {
