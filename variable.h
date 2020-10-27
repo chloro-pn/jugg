@@ -73,4 +73,26 @@ public:
   ~BoolVariable();
 };
 
+class DoubleVariable : public Variable {
+public:
+  double val_;
+  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  Variable* Copy(Variable::Category cate) override;
+  void ChangeCategory(Variable::Category cate) override;
+  void Assign(Variable*) override;
+  Variable* FindMember(const std::string& name) override;
+  ~DoubleVariable();
+};
+
+class CharVariable : public Variable {
+public:
+  char val_;
+  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  Variable* Copy(Variable::Category cate) override;
+  void ChangeCategory(Variable::Category cate) override;
+  void Assign(Variable*) override;
+  Variable* FindMember(const std::string& name) override;
+  ~CharVariable();
+};
+
 Variable* CreateVariable(const std::string& type_name);

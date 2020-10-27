@@ -9,6 +9,15 @@ Variable* CreateVariable(const std::string& type_name) {
   else if (type_name == "int") {
     return new IntVariable;
   }
+  else if (type_name == "double") {
+    return new DoubleVariable;
+  }
+  else if (type_name == "bool") {
+    return new BoolVariable;
+  }
+  else if (type_name == "char") {
+    return new CharVariable;
+  }
   return new AbstractVariable;
 }
 
@@ -140,5 +149,110 @@ Variable* IntVariable::FindMember(const std::string& name) {
 }
 
 IntVariable::~IntVariable() {
+  ;
+}
+
+void DoubleVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  assert(cs.size() == 1);
+  Variable* v = cs[0]->GetVariable();
+  assert(v->type_name_ == "double");
+  val_ = static_cast<DoubleVariable*>(v)->val_;
+  cate_ = cate;
+  delete v;
+}
+
+Variable* DoubleVariable::Copy(Variable::Category cate) {
+  DoubleVariable* result = new DoubleVariable;
+  result->type_name_ = "double";
+  result->id_name_ = id_name_;
+  result->cate_ = cate;
+  result->val_ = static_cast<DoubleVariable*>(this)->val_;
+  return result;
+}
+
+void DoubleVariable::ChangeCategory(Variable::Category cate) {
+  cate_ = cate;
+}
+
+void DoubleVariable::Assign(Variable* v) {
+  assert("double" == v->type_name_);
+  val_ = static_cast<DoubleVariable*>(v)->val_;
+}
+
+Variable* DoubleVariable::FindMember(const std::string& name) {
+  return nullptr;
+}
+
+DoubleVariable::~DoubleVariable() {
+  ;
+}
+
+void BoolVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  assert(cs.size() == 1);
+  Variable* v = cs[0]->GetVariable();
+  assert(v->type_name_ == "bool");
+  val_ = static_cast<BoolVariable*>(v)->val_;
+  cate_ = cate;
+  delete v;
+}
+
+Variable* BoolVariable::Copy(Variable::Category cate) {
+  BoolVariable* result = new BoolVariable;
+  result->type_name_ = "bool";
+  result->id_name_ = id_name_;
+  result->cate_ = cate;
+  result->val_ = static_cast<BoolVariable*>(this)->val_;
+  return result;
+}
+
+void BoolVariable::ChangeCategory(Variable::Category cate) {
+  cate_ = cate;
+}
+
+void BoolVariable::Assign(Variable* v) {
+  assert("double" == v->type_name_);
+  val_ = static_cast<BoolVariable*>(v)->val_;
+}
+
+Variable* BoolVariable::FindMember(const std::string& name) {
+  return nullptr;
+}
+
+BoolVariable::~BoolVariable() {
+  ;
+}
+
+void CharVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  assert(cs.size() == 1);
+  Variable* v = cs[0]->GetVariable();
+  assert(v->type_name_ == "char");
+  val_ = static_cast<CharVariable*>(v)->val_;
+  cate_ = cate;
+  delete v;
+}
+
+Variable* CharVariable::Copy(Variable::Category cate) {
+  CharVariable* result = new CharVariable;
+  result->type_name_ = "char";
+  result->id_name_ = id_name_;
+  result->cate_ = cate;
+  result->val_ = static_cast<CharVariable*>(this)->val_;
+  return result;
+}
+
+void CharVariable::ChangeCategory(Variable::Category cate) {
+  cate_ = cate;
+}
+
+void CharVariable::Assign(Variable* v) {
+  assert("char" == v->type_name_);
+  val_ = static_cast<CharVariable*>(v)->val_;
+}
+
+Variable* CharVariable::FindMember(const std::string& name) {
+  return nullptr;
+}
+
+CharVariable::~CharVariable() {
   ;
 }

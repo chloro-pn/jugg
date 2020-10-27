@@ -1,18 +1,31 @@
 #include "operator.h"
 
+static Variable* plus_int_int(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  int64_t v = static_cast<IntVariable*>(v1)->val_ + static_cast<IntVariable*>(v2)->val_;
+  IntVariable* result = new IntVariable;
+  result->type_name_ = "int";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
+
+static Variable* plus_string_string(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "string" && v2->type_name_ == "string");
+  std::string v = static_cast<StringVariable*>(v1)->val_ + static_cast<StringVariable*>(v2)->val_;
+  StringVariable* result = new StringVariable;
+  result->type_name_ = "string";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
+
 //目前仅仅注册供静态分析使用的函数映射表，提供返回类型。
 static void register_builtin_plus_operators(Operator& plus) {
   plus.static_maps_[{"string", "string"}] = "string";
+  plus.op_funcs_[{"string", "string"}] = plus_string_string;
   plus.static_maps_[{"int", "int"}] = "int";
-  plus.op_funcs_[{"int", "int"}] = [](Variable* v1, Variable* v2)->Variable* {
-    assert(v1->type_name_ == "int" && v2->type_name_ == "int");
-    int64_t v = static_cast<IntVariable*>(v1)->val_ + static_cast<IntVariable*>(v2)->val_;
-    IntVariable* result = new IntVariable;
-    result->type_name_ = "int";
-    result->val_ = v;
-    result->cate_ = Variable::Category::Rvalue;
-    return result;
-  };
+  plus.op_funcs_[{"int", "int"}] = plus_int_int;
   plus.static_maps_[{"double", "double" }] = "double";
   plus.static_maps_[{"int", "double"}] = "double";
   plus.static_maps_[{"double", "int"}] = "double";
@@ -81,6 +94,10 @@ static void register_builtin_operators(std::unordered_map<TOKEN, Operator>& os) 
 
   Operator assign(7, TOKEN::ASSIGN);
   assign.op_funcs_[{"int", "int"}] = [](Variable* v1, Variable* v2)->Variable* {
+    v1->Assign(v2);
+    return v1;
+  };
+  assign.op_funcs_[{"double", "double"}] = [](Variable* v1, Variable* v2)->Variable* {
     v1->Assign(v2);
     return v1;
   };

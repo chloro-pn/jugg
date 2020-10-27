@@ -150,7 +150,11 @@ class DoubleIteralExpr : public Expression {
 public:
   double d_;
   virtual Variable* GetVariable() override {
-    return nullptr;
+    DoubleVariable* v = new DoubleVariable;
+    v->type_name_ = "double";
+    v->val_ = d_;
+    v->cate_ = Variable::Category::Rvalue;
+    return v;
   }
 };
 
@@ -158,7 +162,11 @@ class BoolIteralExpr : public Expression {
 public:
   bool b_;
   virtual Variable* GetVariable() override {
-    return nullptr;
+    BoolVariable* v = new BoolVariable;
+    v->type_name_ = "bool";
+    v->val_ = b_;
+    v->cate_ = Variable::Category::Rvalue;
+    return v;
   }
 };
 
@@ -166,7 +174,11 @@ class CharIteralExpr : public Expression {
 public:
   char c_;
   virtual Variable* GetVariable() override {
-    return nullptr;
+    CharVariable* v = new CharVariable;
+    v->type_name_ = "char";
+    v->val_ = c_;
+    v->cate_ = Variable::Category::Rvalue;
+    return v;
   }
 };
 
