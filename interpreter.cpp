@@ -46,6 +46,7 @@ void Interpreter::Exec() {
   }
 }
 
+// variables已经是函数作用域内的变量
 Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<Variable*>& variables) {
   assert(FuncSet::instance().Find(func_name) == true);
   Func& func = FuncSet::instance().Get(func_name);
@@ -56,7 +57,7 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   for (int i = 0; i < variables.size(); ++i) {
     assert(func.parameter_type_list_[i].second == variables[i]->type_name_);
     //注意应该使用函数参数的名字。
-    fc->vars_[func.parameter_type_list_[i].first] = variables[i]->Copy();
+    fc->vars_[func.parameter_type_list_[i].first] = variables[i];
     fc->vars_[func.parameter_type_list_[i].first]->id_name_ = func.parameter_type_list_[i].first;
   }
   //这里需要一种机制，将fc的return_var_注册给func的block语句中的return语句。
@@ -83,7 +84,7 @@ Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name,
   for (int i = 0; i < variables.size(); ++i) {
     assert(method.parameter_type_list_[i].second == variables[i]->type_name_);
     //注意应该使用函数参数的名字。
-    mc->vars_[method.parameter_type_list_[i].first] = variables[i]->Copy();
+    mc->vars_[method.parameter_type_list_[i].first] = variables[i];
     mc->vars_[method.parameter_type_list_[i].first]->id_name_ = method.parameter_type_list_[i].first;
   }
   //这里需要一种机制，将fc的return_var_注册给func的block语句中的return语句。

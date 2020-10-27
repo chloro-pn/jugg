@@ -39,19 +39,15 @@ class FuncCallExpr : public Expression {
     for (auto& each : parameters_) {
       Variable* v = each->GetVariable();
       if (v->cate_ == Variable::Category::Lvalue) {
-        Variable* tmp = v->Copy();
-        tmp->cate_ = Variable::Category::Lvalue;
+        Variable* tmp = v->Copy(Variable::Category::Lvalue);
         vars.push_back(tmp);
       }
       else {
-        v->cate_ = Variable::Category::Lvalue;
+        v->ChangeCategory(Variable::Category::Lvalue);
         vars.push_back(v);
       }
     }
     Variable* result = Interpreter::instance().CallFunc(func_name_, vars);
-    for (auto& each : vars) {
-      delete each;
-    }
     return result;
   }
 };
@@ -67,19 +63,15 @@ public:
     for (auto& each : parameters_) {
       Variable* v = each->GetVariable();
       if (v->cate_ == Variable::Category::Lvalue) {
-        Variable* tmp = v->Copy();
-        tmp->cate_ = Variable::Category::Lvalue;
+        Variable* tmp = v->Copy(Variable::Category::Lvalue);
         vars.push_back(tmp);
       }
       else {
-        v->cate_ = Variable::Category::Lvalue;
+        v->ChangeCategory(Variable::Category::Lvalue);
         vars.push_back(v);
       }
     }
     Variable* result = Interpreter::instance().CallMethod(obj, method_name_, vars);
-    for (auto& each : vars) {
-      delete each;
-    }
     return result;
   }
 };
@@ -352,8 +344,7 @@ class ReturnStmt : public Statement {
     if (return_exp_ != nullptr) {
       Variable* tmp = return_exp_->GetVariable();
       if (tmp->cate_ == Variable::Category::Lvalue) {
-        *return_var_ = tmp->Copy();
-        (*return_var_)->cate_ = Variable::Category::Rvalue;
+        *return_var_ = tmp->Copy(Variable::Category::Rvalue);
       }
       else {
         //返回的就是右值，故不需要copy，直接使用即可。

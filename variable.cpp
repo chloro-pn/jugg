@@ -21,7 +21,7 @@ void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs,
     assert(v->type_name_ == type.datas_[index].second);
     v->id_name_ = type.datas_[index].first;
     if (v->cate_ == Variable::Category::Lvalue) {
-      Variable* tmp = v->Copy();
+      Variable* tmp = v->Copy(cate);
       tmp->cate_ = cate;
       members_.push_back(tmp);
     }
@@ -33,14 +33,22 @@ void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs,
   cate_ = cate;
 }
 
-Variable* AbstractVariable::Copy() {
+Variable* AbstractVariable::Copy(Variable::Category cate) {
   AbstractVariable* result = new AbstractVariable;
   result->type_name_ = type_name_;
   result->id_name_ = id_name_;
+  result->cate_ = cate;
   for (auto& each : members_) {
-    result->members_.push_back(each->Copy());
+    result->members_.push_back(each->Copy(cate));
   }
   return result;
+}
+
+void AbstractVariable::ChangeCategory(Variable::Category cate) {
+  cate_ = cate;
+  for (auto& each : members_) {
+    each->ChangeCategory(cate);
+  }
 }
 
 void AbstractVariable::Assign(Variable* v) {
@@ -74,12 +82,17 @@ void StringVariable::ConstructByExpression(const std::vector<Expression*>& cs, V
   delete v;
 }
 
-Variable* StringVariable::Copy() {
+Variable* StringVariable::Copy(Variable::Category cate) {
   StringVariable* result = new StringVariable;
   result->type_name_ = "string";
   result->id_name_ = id_name_;
+  result->cate_ = cate;
   result->val_ = static_cast<StringVariable*>(this)->val_;
   return result;
+}
+
+void StringVariable::ChangeCategory(Variable::Category cate) {
+  cate_ = cate;
 }
 
 void StringVariable::Assign(Variable* v) {
@@ -104,12 +117,17 @@ void IntVariable::ConstructByExpression(const std::vector<Expression*>& cs, Vari
   delete v;
 }
 
-Variable* IntVariable::Copy() {
+Variable* IntVariable::Copy(Variable::Category cate) {
   IntVariable* result = new IntVariable;
   result->type_name_ = "int";
   result->id_name_ = id_name_;
+  result->cate_ = cate;
   result->val_ = static_cast<IntVariable*>(this)->val_;
   return result;
+}
+
+void IntVariable::ChangeCategory(Variable::Category cate) {
+  cate_ = cate;
 }
 
 void IntVariable::Assign(Variable* v) {
