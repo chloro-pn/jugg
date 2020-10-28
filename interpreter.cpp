@@ -23,6 +23,9 @@ Interpreter::Interpreter() {
       else if (each.second->type_name_ == "string") {
         std::cout << static_cast<StringVariable*>(each.second)->val_;
       }
+      else if (each.second->type_name_ == "double") {
+        std::cout << static_cast<DoubleVariable*>(each.second)->val_;
+      }
       else {
         assert(false);
       }
@@ -91,8 +94,7 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
     fc->vars_[func.parameter_type_list_[i].first] = variables[i];
     fc->vars_[func.parameter_type_list_[i].first]->id_name_ = func.parameter_type_list_[i].first;
   }
-  //这里需要一种机制，将fc的return_var_注册给func的block语句中的return语句。
-  func.block_->RegisterReturnVar(fc->return_var_);
+
   context_.push(fc);
   Statement::State s = func.block_->exec();
   assert(s == Statement::State::Return);

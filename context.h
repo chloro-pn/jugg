@@ -8,6 +8,7 @@ public:
   std::unordered_map<std::string, Variable*> vars_;
 
   virtual Variable* GetVariableByName(const std::string& name) = 0;
+  virtual Variable** GetReturnVar() = 0;
 };
 
 class FuncContext : public Context {
@@ -20,6 +21,10 @@ public:
       return vars_[name];
     }
     return nullptr;
+  }
+
+  Variable** GetReturnVar() override {
+    return &return_var_;
   }
 };
 
@@ -36,6 +41,10 @@ public:
     Variable* v = obj_->FindMember(name);
     return v;
   }
+
+  Variable** GetReturnVar() override {
+    return &return_var_;
+  }
 };
 
 class BlockContext : public Context {
@@ -44,6 +53,10 @@ public:
     if (vars_.find(name) != vars_.end()) {
       return vars_[name];
     }
+    return nullptr;
+  }
+
+  Variable** GetReturnVar() override {
     return nullptr;
   }
 };

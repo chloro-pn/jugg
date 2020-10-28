@@ -209,12 +209,6 @@ class BlockStmt : public Statement {
     Interpreter::instance().Leave();
     return State::Next;
   }
-
-  void RegisterReturnVar(Variable*& rv) override {
-    for (auto& each : block_) {
-      each->RegisterReturnVar(rv);
-    }
-  }
 };
 
 class FMBlockStmt : public BlockStmt {
@@ -310,7 +304,7 @@ class WhileStmt : public Statement {
       if (v->cate_ == Variable::Category::Rvalue) {
         delete v;
       }
-      if (check == true) {
+      if (check == false) {
         break;
       }
       State s = block_->exec();
@@ -346,13 +340,10 @@ public:
 class ReturnStmt : public Statement {
  public:
   Expression* return_exp_;
-  Variable** return_var_;
-
-  void RegisterReturnVar(Variable*& rv) override {
-    return_var_ = &rv;
-  }
 
   State exec() override {
+    Variable** return_var_ = Interpreter::instance().GetCurrentContext()->GetReturnVar();
+    assert(return_var_ != nullptr);
     if (return_exp_ != nullptr) {
       Variable* tmp = return_exp_->GetVariable();
       if (tmp->cate_ == Variable::Category::Lvalue) {

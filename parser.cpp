@@ -347,7 +347,6 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
   }
   else if (tokens[begin].token == TOKEN::RETURN) {
     ReturnStmt* result = new ReturnStmt;
-    result->return_var_ = nullptr;
     ++begin;
     if (tokens[begin].token != TOKEN::SEMICOLON) {
       size_t next = FindNextSemicolon(tokens, begin);

@@ -93,15 +93,47 @@ static void register_builtin_operators(std::unordered_map<TOKEN, Operator>& os) 
   os[TOKEN::NOT] = n;
 
   Operator assign(7, TOKEN::ASSIGN);
-  assign.op_funcs_[{"int", "int"}] = [](Variable* v1, Variable* v2)->Variable* {
+  auto assign_func = [](Variable* v1, Variable* v2)->Variable* {
     v1->Assign(v2);
+    assert(v1->cate_ == Variable::Category::Lvalue);
     return v1;
   };
-  assign.op_funcs_[{"double", "double"}] = [](Variable* v1, Variable* v2)->Variable* {
-    v1->Assign(v2);
-    return v1;
-  };
+  assign.op_funcs_[{"int", "int"}] = assign_func;
+  assign.op_funcs_[{"double", "double"}] = assign_func;
+  assign.op_funcs_[{"string", "string"}] = assign_func;
   Operator compare(4, TOKEN::COMPARE);
+  compare.op_funcs_[{"int", "int"}] = [](Variable* v1, Variable* v2)->Variable* {
+    assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+    int64_t n1 = static_cast<IntVariable*>(v1)->val_;
+    int64_t n2 = static_cast<IntVariable*>(v2)->val_;
+    BoolVariable* result = new BoolVariable;
+    result->cate_ = Variable::Category::Rvalue;
+    result->type_name_ = "bool";
+    if (n1 == n2) {
+      result->val_ = true;
+    }
+    else {
+      result->val_ = false;
+    }
+    result->id_name_ = "tmp";
+    return result;
+  };
+  compare.op_funcs_[{"string", "string"}] = [](Variable* v1, Variable* v2)->Variable* {
+    assert(v1->type_name_ == "string" && v2->type_name_ == "string");
+    std::string& s1 = static_cast<StringVariable*>(v1)->val_;
+    std::string& s2 = static_cast<StringVariable*>(v2)->val_;
+    BoolVariable* result = new BoolVariable;
+    result->cate_ = Variable::Category::Rvalue;
+    result->type_name_ = "bool";
+    if (s1 == s2) {
+      result->val_ = true;
+    }
+    else {
+      result->val_ = false;
+    }
+    result->id_name_ = "tmp";
+    return result;
+  };
   Operator greater_than(3, TOKEN::GREATER_THAN);
   Operator less_than(3, TOKEN::LESS_THAN);
   os[TOKEN::ASSIGN] = assign;
