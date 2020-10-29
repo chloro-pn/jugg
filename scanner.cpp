@@ -7,110 +7,6 @@
 #include <sstream>
 #include <iostream>
 
-const char* GetTokenStr(TOKEN token) {
-  switch (token) {
-  case TOKEN::SPACE:
-    return "space";
-  case TOKEN::TAB:
-    return "tab";
-  case TOKEN::ENTER:
-    return "enter";
-  case TOKEN::LINEFEED:
-    return "linefeed";
-  case TOKEN::INT:
-    return "int";
-  case TOKEN::DOUBLE:
-    return "double";
-  case TOKEN::STRING:
-    return "string";
-  case TOKEN::BOOL:
-    return "bool";
-  case TOKEN::CHAR:
-    return "char";
-  case TOKEN::VOID:
-    return "void";
-  case TOKEN::IF:
-    return "if";
-  case TOKEN::WHILE:
-    return "while";
-  case TOKEN::ELSE:
-    return "else";
-  case TOKEN::BREAK:
-    return "break";
-  case TOKEN::CONTINUE:
-    return "continue";
-  case TOKEN::RETURN:
-    return "return";
-  case TOKEN::LEFT_PARENTHESIS:
-    return "(";
-  case TOKEN::RIGHT_PARENTHESIS:
-    return ")";
-  case TOKEN::LEFT_BRACKETS:
-    return "[";
-  case TOKEN::RIGHT_BRACKETS:
-    return "]";
-  case TOKEN::LEFT_BRACE:
-    return "{";
-  case TOKEN::RIGHT_BRACE:
-    return "}";
-  case TOKEN::SEMICOLON:
-    return ";";
-  case TOKEN::COLON:
-    return ":";
-  case TOKEN::DECIMAL_POINT:
-    return ".";
-  case TOKEN::COMMA:
-    return ",";
-  case TOKEN::PLUS:
-    return "+";
-  case TOKEN::MINUS:
-    return "-";
-  case TOKEN::MULTIPLY:
-    return "*";
-  case TOKEN::DIVIDE:
-    return "/";
-  case TOKEN::AND:
-    return "&";
-  case TOKEN::OR:
-    return "|";
-  case TOKEN::NOT:
-    return "~";
-  case TOKEN::ASSIGN:
-    return "=";
-  case TOKEN::COMPARE:
-    return "==";
-  case TOKEN::GREATER_THAN:
-    return ">";
-  case TOKEN::LESS_THAN:
-    return "<";
-  case TOKEN::STRING_ITERAL:
-    return "string_iteral";
-  case TOKEN::TRUE:
-    return "true";
-  case TOKEN::FALSE:
-    return "false";
-  case TOKEN::INT_ITERAL:
-    return "int_iteral";
-  case TOKEN::DOUBLE_ITERAL:
-    return "double_iteral";
-  case TOKEN::CHAR_ITERAL:
-    return "char_iteral";
-  case TOKEN::FUNC:
-    return "func";
-  case TOKEN::TYPE:
-    return "type";
-  case TOKEN::METHOD:
-    return "method";
-  case TOKEN::ID:
-    return "id";
-  case TOKEN::TEOF:
-    return "teof";
-  default:
-    assert(token == TOKEN::INVALID);
-    return "invalid";
-  }
-}
-
 template<typename T>
 Token CreateToken(TOKEN token, T t);
 
@@ -124,7 +20,7 @@ template<>
 Token CreateToken(TOKEN token, double d);
 
 template<>
-Token CreateToken(TOKEN token, char c);
+Token CreateToken(TOKEN token, uint8_t c);
 
 template<>
 Token CreateToken(TOKEN token, bool b);
@@ -159,10 +55,10 @@ Token CreateToken(TOKEN token, double d) {
 }
 
 template<>
-Token CreateToken(TOKEN token, char c) {
+Token CreateToken(TOKEN token, uint8_t c) {
   Token result;
   result.token = token;
-  result.type = Token::TYPE::CHAR;
+  result.type = Token::TYPE::BYTE;
   result.attr = c;
   return result;
 }
@@ -181,6 +77,24 @@ Token CreateToken(TOKEN token) {
   result.token = token;
   result.type = Token::TYPE::NONE;
   return result;
+}
+
+static uint8_t string_to_uint8_t(const std::string& str) {
+  assert(str.size() == 4 && str[0] == '0' && str[1] == 'X');
+  int b1 = 0, b2 = 0;
+  if (str[2] >= '0' && str[2] <= '9') {
+    b1 = str[2] - '0';
+  }
+  else {
+    b1 = str[2] - 'A' + 10;
+  }
+  if (str[3] >= '0' && str[3] <= '9') {
+    b2 = str[3] - '0';
+  }
+  else {
+    b2 = str[3] - 'A' + 10;
+  }
+  return static_cast<uint8_t>(b1 * 16 + b2);
 }
 
 std::vector<Token> scan(std::string file) {
@@ -279,8 +193,8 @@ std::vector<Token> scan(std::string file) {
       tokens.push_back(CreateToken(TOKEN::LESS_THAN));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("\".*?\""), std::regex_constants::match_continuous)) {
-      tokens.push_back(CreateToken(TOKEN::STRING_ITERAL, result[0].str()));
+    else if (std::regex_search(begin, end, result, std::regex("\"(.*?)\""), std::regex_constants::match_continuous)) {
+      tokens.push_back(CreateToken(TOKEN::STRING_ITERAL, result[1].str()));
       begin = result[0].second;
     }
     else if (std::regex_search(begin, end, result, std::regex("[-+]?(0|[1-9][0-9]*)\\.[0-9]*"), std::regex_constants::match_continuous)) {
@@ -299,8 +213,8 @@ std::vector<Token> scan(std::string file) {
       tokens.push_back(CreateToken(TOKEN::INT_ITERAL, num));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("\'.\'"), std::regex_constants::match_continuous)) {
-      tokens.push_back(CreateToken(TOKEN::CHAR_ITERAL, result[0].str()[0]));
+    else if (std::regex_search(begin, end, result, std::regex("0X[0-9A-F][0-9A-F]"), std::regex_constants::match_continuous)) {
+      tokens.push_back(CreateToken(TOKEN::BYTE_ITERAL, string_to_uint8_t(result[0].str())));
       begin = result[0].second;
     }
     else if (std::regex_search(begin, end, result, std::regex("[a-zA-Z_][a-zA-Z0-9_]*"), std::regex_constants::match_continuous)) {
@@ -322,14 +236,23 @@ std::vector<Token> scan(std::string file) {
   return tokens;
 }
 
-// Scanner负责在TOKEN流最后补充teof的token。
-Scanner::Scanner(std::string filename) {
+Scanner& Scanner::instance() {
+  static Scanner obj;
+  return obj;
+}
+
+const std::vector<Token>& Scanner::Scan(const std::string& filename) {
   std::ifstream in(filename.c_str());
   std::stringstream buffer;
   buffer << in.rdbuf();
   std::string str(buffer.str());
   tokens_ = scan(str);
   tokens_.push_back(CreateToken(TOKEN::TEOF));
+  return tokens_;
+}
+
+Scanner::Scanner() {
+
 }
 
 void TokenPrint(const std::vector<Token>& tokens) {
@@ -350,8 +273,8 @@ void TokenPrint(const std::vector<Token>& tokens) {
       else if (it->type == Token::TYPE::BOOL) {
         std::cout << "bool : " << std::any_cast<bool>(it->attr);
       }
-      else if (it->type == Token::TYPE::CHAR) {
-        std::cout << "char : " << std::any_cast<char>(it->attr);
+      else if (it->type == Token::TYPE::BYTE) {
+        std::cout << "char : " << std::any_cast<uint8_t>(it->attr);
       }
     }
     std::cout << std::endl;

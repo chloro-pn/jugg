@@ -1,7 +1,5 @@
 #pragma once
 #include "ast_node.h"
-#include "scanner.h"
-#include "operator.h"
 #include "func.h"
 #include "type.h"
 #include <vector>

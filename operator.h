@@ -12,7 +12,6 @@ struct Operator {
       return std::hash<std::string>()(e.first) + std::hash<std::string>()(e.second);
     }
   };
-  std::unordered_map<std::pair<std::string, std::string>, std::string, hash_for_maps> static_maps_;
   std::unordered_map<std::pair<std::string, std::string>, std::function<Variable*(Variable*, Variable*)>, hash_for_maps> op_funcs_;
   Operator(int l, TOKEN t) : level_(l), token_(t) {
 
@@ -20,11 +19,6 @@ struct Operator {
 
   Operator() : level_(-1), token_(TOKEN::INVALID) {
 
-  }
-
-  std::string GetReturnType(const std::string& t1, const std::string& t2) {
-    assert(static_maps_.find({ t1, t2 }) != static_maps_.end());
-    return static_maps_[{t1, t2}];
   }
 
   bool FindOpFuncs(const std::string& t1, const std::string& t2) const {

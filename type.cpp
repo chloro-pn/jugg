@@ -7,7 +7,7 @@ static void register_builtin_type(std::unordered_map<std::string, Type>& types) 
   types["string"] = Type("string");
   types["double"] = Type("double");
   types["bool"] = Type("bool");
-  types["char"] = Type("char");
+  types["byte"] = Type("byte");
   types["void"] = Type("void");
 }
 

@@ -3,9 +3,7 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
-#include "scanner.h"
 #include "operator.h"
-#include "func.h"
 #include "variable.h"
 #include "interpreter.h"
 
@@ -43,6 +41,7 @@ class FuncCallExpr : public Expression {
         vars.push_back(tmp);
       }
       else {
+        //注意，右值是没有名字的，因此在CallFunc中需要赋值给每个Rvale参数名字
         v->ChangeCategory(Variable::Category::Lvalue);
         vars.push_back(v);
       }
@@ -170,12 +169,12 @@ public:
   }
 };
 
-class CharIteralExpr : public Expression {
+class ByteIteralExpr : public Expression {
 public:
-  char c_;
+  uint8_t c_;
   virtual Variable* GetVariable() override {
-    CharVariable* v = new CharVariable;
-    v->type_name_ = "char";
+    ByteVariable* v = new ByteVariable;
+    v->type_name_ = "byte";
     v->val_ = c_;
     v->cate_ = Variable::Category::Rvalue;
     return v;
@@ -186,10 +185,6 @@ class Statement : public AstNode {
 public:
   enum class State { Continue, Break, Next, Return };
   virtual State exec() = 0;
-  // 这个函数为了向return语句注册函数返回值
-  virtual void RegisterReturnVar(Variable*& rv) {
-    ;
-  }
 };
 
 class BlockStmt : public Statement {

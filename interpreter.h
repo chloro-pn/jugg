@@ -7,6 +7,13 @@
 #include <algorithm>
 #include <functional>
 #include <unordered_map>
+
+struct inner_func_context {
+  std::string func_name;
+  std::vector<Variable*> vars_;
+  Variable* return_var_;
+};
+
 class VariableDefineStmt;
 
 class Interpreter {
@@ -39,5 +46,5 @@ private:
   Interpreter();
   std::stack<Context*> context_;
   std::vector<VariableDefineStmt*> global_var_;
-  std::unordered_map<std::string, std::function<void(FuncContext*)>> inner_func_;
+  std::unordered_map<std::string, std::function<void(inner_func_context*)>> inner_func_;
 };

@@ -14,7 +14,7 @@ static void register_buildin_keyword(std::unordered_map<std::string, TOKEN>& con
   container["int"] = TOKEN::INT;
   container["double"] = TOKEN::DOUBLE;
   container["bool"] = TOKEN::BOOL;
-  container["char"] = TOKEN::CHAR;
+  container["byte"] = TOKEN::BYTE;
   container["void"] = TOKEN::VOID;
   container["func"] = TOKEN::FUNC;
   container["type"] = TOKEN::TYPE;

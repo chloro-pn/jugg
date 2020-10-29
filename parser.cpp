@@ -197,9 +197,9 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
           expr->int_ = tokens[i].get<int64_t>();
           operands.push(expr);
         }
-        else if (tokens[i].token == TOKEN::CHAR_ITERAL) {
-          CharIteralExpr* expr = new CharIteralExpr;
-          expr->c_ = tokens[i].get<char>();
+        else if (tokens[i].token == TOKEN::BYTE_ITERAL) {
+          ByteIteralExpr* expr = new ByteIteralExpr;
+          expr->c_ = tokens[i].get<uint8_t>();
           operands.push(expr);
         }
         else {

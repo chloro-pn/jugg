@@ -15,8 +15,8 @@ Variable* CreateVariable(const std::string& type_name) {
   else if (type_name == "bool") {
     return new BoolVariable;
   }
-  else if (type_name == "char") {
-    return new CharVariable;
+  else if (type_name == "byte") {
+    return new ByteVariable;
   }
   return new AbstractVariable;
 }
@@ -175,7 +175,7 @@ void DoubleVariable::ChangeCategory(Variable::Category cate) {
 }
 
 void DoubleVariable::Assign(Variable* v) {
-  assert("double" == v->type_name_);
+  assert("double" == v->type_name_ || "int" == v->type_name_);
   val_ = static_cast<DoubleVariable*>(v)->val_;
 }
 
@@ -222,37 +222,37 @@ BoolVariable::~BoolVariable() {
   ;
 }
 
-void CharVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+void ByteVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
-  assert(v->type_name_ == "char");
-  val_ = static_cast<CharVariable*>(v)->val_;
+  assert(v->type_name_ == "byte");
+  val_ = static_cast<ByteVariable*>(v)->val_;
   cate_ = cate;
   delete v;
 }
 
-Variable* CharVariable::Copy(Variable::Category cate) {
-  CharVariable* result = new CharVariable;
-  result->type_name_ = "char";
+Variable* ByteVariable::Copy(Variable::Category cate) {
+  ByteVariable* result = new ByteVariable;
+  result->type_name_ = "byte";
   result->id_name_ = id_name_;
   result->cate_ = cate;
-  result->val_ = static_cast<CharVariable*>(this)->val_;
+  result->val_ = static_cast<ByteVariable*>(this)->val_;
   return result;
 }
 
-void CharVariable::ChangeCategory(Variable::Category cate) {
+void ByteVariable::ChangeCategory(Variable::Category cate) {
   cate_ = cate;
 }
 
-void CharVariable::Assign(Variable* v) {
-  assert("char" == v->type_name_);
-  val_ = static_cast<CharVariable*>(v)->val_;
+void ByteVariable::Assign(Variable* v) {
+  assert("byte" == v->type_name_);
+  val_ = static_cast<ByteVariable*>(v)->val_;
 }
 
-Variable* CharVariable::FindMember(const std::string& name) {
+Variable* ByteVariable::FindMember(const std::string& name) {
   return nullptr;
 }
 
-CharVariable::~CharVariable() {
+ByteVariable::~ByteVariable() {
   ;
 }

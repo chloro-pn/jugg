@@ -2,6 +2,8 @@
 #include "type.h"
 #include "ast_node.h"
 #include "variable.h"
+#include "scanner.h"
+#include "parser.h"
 #include <algorithm>
 #include <iostream>
 
@@ -10,27 +12,46 @@ Interpreter& Interpreter::instance() {
   return obj;
 }
 
+static void inner_print(inner_func_context* fc) {
+  fc->return_var_ = new VoidVariable;
+  fc->return_var_->id_name_ = "void";
+  for (auto& each : fc->vars_) {
+    if (each->type_name_ == "int") {
+      std::cout << static_cast<IntVariable*>(each)->val_;
+    }
+    else if (each->type_name_ == "string") {
+      std::cout << static_cast<StringVariable*>(each)->val_;
+    }
+    else if (each->type_name_ == "double") {
+      std::cout << static_cast<DoubleVariable*>(each)->val_;
+    }
+    else if (each->type_name_ == "bool") {
+      std::cout << static_cast<BoolVariable*>(each)->val_;
+    }
+    else if (each->type_name_ == "byte") {
+      std::cout << static_cast<ByteVariable*>(each)->val_;
+    }
+    else {
+      assert(false);
+    }
+  }
+}
+
+static void inner_len(inner_func_context* fc) {
+  assert(fc->vars_.size() == 1 && fc->vars_[0]->type_name_ == "string");
+  size_t i = static_cast<StringVariable*>(fc->vars_[0])->val_.size();
+  IntVariable* v = new IntVariable;
+  v->cate_ = Variable::Category::Rvalue;
+  v->id_name_ = "tmp";
+  v->type_name_ = "int";
+  v->val_ = i;
+  fc->return_var_ = v;
+}
+
 //初始情况下在全局作用域。
 Interpreter::Interpreter() {
   context_.push(new BlockContext);
-  inner_func_["print"] = [](FuncContext* fc)->void {
-    fc->return_var_ = new VoidVariable;
-    fc->return_var_->id_name_ = "void";
-    for (auto& each : fc->vars_) {
-      if (each.second->type_name_ == "int") {
-        std::cout << static_cast<IntVariable*>(each.second)->val_;
-      }
-      else if (each.second->type_name_ == "string") {
-        std::cout << static_cast<StringVariable*>(each.second)->val_;
-      }
-      else if (each.second->type_name_ == "double") {
-        std::cout << static_cast<DoubleVariable*>(each.second)->val_;
-      }
-      else {
-        assert(false);
-      }
-    }
-  };
+  inner_func_["print"] = inner_print;
 }
 
 Variable* Interpreter::FindVariableByName(const std::string& name) {
@@ -68,18 +89,16 @@ void Interpreter::Exec() {
 // variables已经是函数作用域内的变量
 Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<Variable*>& variables) {
   if (inner_func_.find(func_name) != inner_func_.end()) {
-    FuncContext* fc = new FuncContext;
-    fc->func_name_ = func_name;
+    inner_func_context* ifc = new inner_func_context;
+    ifc->func_name = func_name;
     //main函数没有参数传入
-    for (int i = 0; i < variables.size(); ++i) {
-      fc->vars_[variables[i]->id_name_] = variables[i];
+    ifc->vars_ = variables;
+    inner_func_[func_name](ifc);
+    for (auto& each : ifc->vars_) {
+      delete each;
     }
-    inner_func_[func_name](fc);
-    for (auto& each : fc->vars_) {
-      delete each.second;
-    }
-    Variable* result = fc->return_var_;
-    delete fc;
+    Variable* result = ifc->return_var_;
+    delete ifc;
     return result;
   }
   assert(FuncSet::instance().Find(func_name) == true);
@@ -91,8 +110,8 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   for (int i = 0; i < variables.size(); ++i) {
     assert(func.parameter_type_list_[i].second == variables[i]->type_name_);
     //注意应该使用函数参数的名字。
+    variables[i]->id_name_ = func.parameter_type_list_[i].first;
     fc->vars_[func.parameter_type_list_[i].first] = variables[i];
-    fc->vars_[func.parameter_type_list_[i].first]->id_name_ = func.parameter_type_list_[i].first;
   }
 
   context_.push(fc);
@@ -119,11 +138,9 @@ Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name,
   for (int i = 0; i < variables.size(); ++i) {
     assert(method.parameter_type_list_[i].second == variables[i]->type_name_);
     //注意应该使用函数参数的名字。
+    variables[i]->id_name_ = method.parameter_type_list_[i].first;
     mc->vars_[method.parameter_type_list_[i].first] = variables[i];
-    mc->vars_[method.parameter_type_list_[i].first]->id_name_ = method.parameter_type_list_[i].first;
   }
-  //这里需要一种机制，将fc的return_var_注册给func的block语句中的return语句。
-  method.block_->RegisterReturnVar(mc->return_var_);
   context_.push(mc);
   Statement::State s = method.block_->exec();
   assert(s == Statement::State::Return);

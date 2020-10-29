@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <cassert>
+
 class Expression;
 
 class Variable {
@@ -84,15 +85,15 @@ public:
   ~DoubleVariable();
 };
 
-class CharVariable : public Variable {
+class ByteVariable : public Variable {
 public:
-  char val_;
+  uint8_t val_;
   void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
   Variable* Copy(Variable::Category cate) override;
   void ChangeCategory(Variable::Category cate) override;
   void Assign(Variable*) override;
   Variable* FindMember(const std::string& name) override;
-  ~CharVariable();
+  ~ByteVariable();
 };
 
 Variable* CreateVariable(const std::string& type_name);
