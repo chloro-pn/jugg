@@ -67,12 +67,32 @@ static void register_builtin_multiply_operators(Operator& op) {
 static void register_builtin_divide_operators(Operator& op) {
 }
 
-static void register_builtin_and_operators(Operator& op) {
+static Variable* and_bool_bool(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "bool" && v2->type_name_ == "bool");
+  bool b = static_cast<BoolVariable*>(v1)->val_ && static_cast<BoolVariable*>(v2)->val_;
+  BoolVariable* result = new BoolVariable;
+  result->type_name_ = "bool";
+  result->val_ = b;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
 
+static void register_builtin_and_operators(Operator& op) {
+  op.op_funcs_[{"bool", "bool"}] = and_bool_bool;
+}
+
+static Variable* or_bool_bool(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "bool" && v2->type_name_ == "bool");
+  bool b = static_cast<BoolVariable*>(v1)->val_ || static_cast<BoolVariable*>(v2)->val_;
+  BoolVariable* result = new BoolVariable;
+  result->type_name_ = "bool";
+  result->val_ = b;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
 }
 
 static void register_builtin_or_operators(Operator& op) {
-
+  op.op_funcs_[{"bool", "bool"}] = or_bool_bool;
 }
 
 static void register_builtin_not_operators(Operator& op) {
