@@ -32,6 +32,9 @@ public:
     delete c;
   }
   Context* GetCurrentContext() {
+    if (context_.empty() == true) {
+      return global_context_;
+    }
     return context_.top();
   }
   void RegisterGlobalVariable(VariableDefineStmt* v);
@@ -43,6 +46,7 @@ public:
   Variable* CallMethod(Variable* obj, const std::string& method_name, const std::vector<Variable*>& variables);
 
 private:
+  Context* global_context_;
   Interpreter();
   std::stack<Context*> context_;
   std::vector<VariableDefineStmt*> global_var_;

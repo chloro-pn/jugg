@@ -51,7 +51,9 @@ static void inner_len(inner_func_context* fc) {
 
 //初始情况下在全局作用域。
 Interpreter::Interpreter() {
-  context_.push(new BlockContext);
+  global_context_ = new BlockContext;
+  global_context_->type_ = Context::Type::Global;
+
   inner_func_["print"] = inner_print;
 }
 
@@ -60,12 +62,25 @@ Variable* Interpreter::FindVariableByName(const std::string& name) {
   while (c.empty() == false) {
     Context* cur = c.top();
     c.pop();
-    Variable* v = cur->GetVariableByName(name);
-    if (v != nullptr) {
-      return v;
+    if (cur->type_ == Context::Type::Func || cur->type_ == Context::Type::Method) {
+      Variable* v = cur->GetVariableByName(name);
+      if (v != nullptr) {
+        return v;
+      }
+      else {
+        //全局变量中查找
+        return global_context_->GetVariableByName(name);
+      }
+    }
+    else {
+      assert(cur->type_ == Context::Type::Block);
+      Variable* v = cur->GetVariableByName(name);
+      if (v != nullptr) {
+        return v;
+      }
     }
   }
-  return nullptr;
+  return global_context_->GetVariableByName(name);
 }
 
 void Interpreter::Exec() {
@@ -75,16 +90,17 @@ void Interpreter::Exec() {
     v->id_name_ = each->var_name_;
     v->type_name_ = each->type_name_;
     v->ConstructByExpression(each->constructors_, Variable::Category::Lvalue);
-    GetCurrentContext()->vars_[v->id_name_] = v;
+    global_context_->vars_[v->id_name_] = v;
   }
   Variable* v = CallFunc("main", {});
   assert(v->type_name_ == "void");
   delete v;
-  assert(context_.size() == 1);
+  assert(context_.size() == 0);
   //全局变量的析构
   for (auto& each : GetCurrentContext()->vars_) {
     delete each.second;
   }
+  delete global_context_;
 }
 
 // variables已经是函数作用域内的变量
@@ -106,6 +122,7 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   Func& func = FuncSet::instance().Get(func_name);
   FuncContext* fc = new FuncContext;
   fc->func_name_ = func_name;
+  fc->type_ = Context::Type::Func;
   //main函数没有参数传入
   assert(func.parameter_type_list_.size() == variables.size());
   for (int i = 0; i < variables.size(); ++i) {
@@ -134,6 +151,7 @@ Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name,
   Method& method = type.methods_[method_name];
   MethodContext* mc = new MethodContext;
   mc->method_name_ = method_name;
+  mc->type_ = Context::Type::Method;
   mc->obj_ = obj;
   assert(method.parameter_type_list_.size() == variables.size());
   for (int i = 0; i < variables.size(); ++i) {

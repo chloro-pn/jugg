@@ -48,6 +48,12 @@ func main() void {
   byte b2(0X28);
   p.name = "pangnan";
   inta = b + min(e, f);
-  print(inta + sum(10));
+  if(b == 3) {
+    int inta(100);
+    print(inta + sum(10));
+  }
+  else {
+    print(inta + sum(10));
+  }
   return;
 }

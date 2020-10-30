@@ -5,6 +5,8 @@
 
 class Context {
 public:
+  enum class Type { Block, Func, Method, Global };
+  Type type_;
   std::unordered_map<std::string, Variable*> vars_;
 
   virtual Variable* GetVariableByName(const std::string& name) = 0;

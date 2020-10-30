@@ -193,6 +193,7 @@ class BlockStmt : public Statement {
 
   State exec() override {
     BlockContext* bc = new BlockContext;
+    bc->type_ = Context::Type::Block;
     Interpreter::instance().Enter(bc);
     for (auto& each : block_) {
       State s = each->exec();
