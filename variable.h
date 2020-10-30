@@ -11,6 +11,7 @@ public:
   enum class Category { Lvalue, Rvalue };
   Category cate_;
   virtual void ConstructByExpression(const std::vector<Expression*>& constructors, Variable::Category cate) = 0;
+  virtual void DefaultConstruct(Variable::Category cate) = 0;
   virtual Variable* Copy(Variable::Category cate) = 0;
   virtual void ChangeCategory(Variable::Category cate) = 0;
   virtual void Assign(Variable* v) = 0;
@@ -22,6 +23,7 @@ public:
 
 class VoidVariable : public Variable {
   void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override {};
+  void DefaultConstruct(Variable::Category cate) override {};
   Variable* Copy(Variable::Category cate) override { return nullptr; };
   void ChangeCategory(Variable::Category cate) override {};
   void Assign(Variable*) override {};
@@ -34,6 +36,7 @@ public:
   std::vector<Variable*> members_;
 
   void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  void DefaultConstruct(Variable::Category cate) override;
   Variable* Copy(Variable::Category cate) override;
   void ChangeCategory(Variable::Category cate) override;
   void Assign(Variable*) override;
@@ -45,6 +48,7 @@ class StringVariable : public Variable {
 public:
   std::string val_;
   void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  void DefaultConstruct(Variable::Category cate) override;
   Variable* Copy(Variable::Category cate) override;
   void ChangeCategory(Variable::Category cate) override;
   void Assign(Variable*) override;
@@ -56,6 +60,7 @@ class IntVariable : public Variable {
 public:
   int64_t val_;
   void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  void DefaultConstruct(Variable::Category cate) override;
   Variable* Copy(Variable::Category cate) override;
   void ChangeCategory(Variable::Category cate) override;
   void Assign(Variable*) override;
@@ -67,6 +72,7 @@ class BoolVariable : public Variable {
 public:
   bool val_;
   void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  void DefaultConstruct(Variable::Category cate) override;
   Variable* Copy(Variable::Category cate) override;
   void ChangeCategory(Variable::Category cate) override;
   void Assign(Variable*) override;
@@ -78,6 +84,7 @@ class DoubleVariable : public Variable {
 public:
   double val_;
   void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  void DefaultConstruct(Variable::Category cate) override;
   Variable* Copy(Variable::Category cate) override;
   void ChangeCategory(Variable::Category cate) override;
   void Assign(Variable*) override;
@@ -89,6 +96,7 @@ class ByteVariable : public Variable {
 public:
   uint8_t val_;
   void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  void DefaultConstruct(Variable::Category cate) override;
   Variable* Copy(Variable::Category cate) override;
   void ChangeCategory(Variable::Category cate) override;
   void Assign(Variable*) override;

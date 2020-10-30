@@ -23,6 +23,10 @@ Variable* CreateVariable(const std::string& type_name) {
 
 //type_name_和id_name_已经被设置
 void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  if (cs.size() == 0) {
+    DefaultConstruct(cate);
+    return;
+  }
   Type& type = TypeSet::instance().Get(type_name_);
   assert(type.datas_.size() == cs.size());
   for (size_t index = 0; index < cs.size(); ++index) {
@@ -40,6 +44,20 @@ void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs,
     }
   }
   cate_ = cate;
+}
+
+//type_name和id_name应该已经被设置
+void AbstractVariable::DefaultConstruct(Variable::Category cate) {
+  cate_ = cate;
+  Type& type = TypeSet::instance().Get(type_name_);
+  size_t count = type.datas_.size();
+  for (size_t i = 0; i < count; ++i) {
+    Variable* v = CreateVariable(type.datas_[i].second);
+    v->type_name_ = type.datas_[i].second;
+    v->id_name_ = type.datas_[i].first;
+    v->DefaultConstruct(cate);
+    members_.push_back(v);
+  }
 }
 
 Variable* AbstractVariable::Copy(Variable::Category cate) {
@@ -83,12 +101,21 @@ AbstractVariable::~AbstractVariable() {
 }
 
 void StringVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  if (cs.size() == 0) {
+    DefaultConstruct(cate);
+    return;
+  }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
   assert(v->type_name_ == "string");
   val_ = static_cast<StringVariable*>(v)->val_;
   cate_ = cate;
   delete v;
+}
+
+void StringVariable::DefaultConstruct(Variable::Category cate) {
+  cate_ = cate;
+  val_ = "";
 }
 
 Variable* StringVariable::Copy(Variable::Category cate) {
@@ -118,12 +145,21 @@ StringVariable::~StringVariable() {
 }
 
 void IntVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  if (cs.size() == 0) {
+    DefaultConstruct(cate);
+    return;
+  }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
   assert(v->type_name_ == "int");
   val_ = static_cast<IntVariable*>(v)->val_;
   cate_ = cate;
   delete v;
+}
+
+void IntVariable::DefaultConstruct(Variable::Category cate) {
+  cate_ = cate;
+  val_ = 0;
 }
 
 Variable* IntVariable::Copy(Variable::Category cate) {
@@ -153,12 +189,21 @@ IntVariable::~IntVariable() {
 }
 
 void DoubleVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  if (cs.size() == 0) {
+    DefaultConstruct(cate);
+    return;
+  }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
   assert(v->type_name_ == "double");
   val_ = static_cast<DoubleVariable*>(v)->val_;
   cate_ = cate;
   delete v;
+}
+
+void DoubleVariable::DefaultConstruct(Variable::Category cate) {
+  cate_ = cate;
+  val_ = 0.0;
 }
 
 Variable* DoubleVariable::Copy(Variable::Category cate) {
@@ -188,12 +233,21 @@ DoubleVariable::~DoubleVariable() {
 }
 
 void BoolVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  if (cs.size() == 0) {
+    DefaultConstruct(cate);
+    return;
+  }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
   assert(v->type_name_ == "bool");
   val_ = static_cast<BoolVariable*>(v)->val_;
   cate_ = cate;
   delete v;
+}
+
+void BoolVariable::DefaultConstruct(Variable::Category cate) {
+  cate_ = cate;
+  val_ = true;
 }
 
 Variable* BoolVariable::Copy(Variable::Category cate) {
@@ -223,12 +277,21 @@ BoolVariable::~BoolVariable() {
 }
 
 void ByteVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  if (cs.size() == 0) {
+    DefaultConstruct(cate);
+    return;
+  }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
   assert(v->type_name_ == "byte");
   val_ = static_cast<ByteVariable*>(v)->val_;
   cate_ = cate;
   delete v;
+}
+
+void ByteVariable::DefaultConstruct(Variable::Category cate) {
+  cate_ = cate;
+  val_ = 0x00;
 }
 
 Variable* ByteVariable::Copy(Variable::Category cate) {

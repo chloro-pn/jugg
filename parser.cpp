@@ -153,6 +153,7 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         size_t match_parent = FindMatchedParenthesis(tokens, i + 1);
         operands.push(ParseFuncCallExpr(tokens, i, match_parent));
         i = match_parent;
+        continue;
       }
       //成员访问表达式
       else if (i + 1 < tokens.size() && tokens[i + 1].token == TOKEN::DECIMAL_POINT) {
@@ -175,6 +176,7 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
           expr->data_member_name_ = tokens[i].get<std::string>();
           operands.push(expr);
         }
+        continue;
       }
       else {
         if (tokens[i].token == TOKEN::TRUE || tokens[i].token == TOKEN::FALSE) {
@@ -209,8 +211,10 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
           idexpr->id_name_ = tokens[i].get<std::string>();
           operands.push(idexpr);
         }
+        continue;
       }
-      continue;
+      //非法的token
+      assert(false);
     }
     else {
       while (operators.empty() == false && CompareOperatorLevel(current_token, operators.top()) <= 0) {

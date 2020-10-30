@@ -1,0 +1,53 @@
+//测试文件
+
+//全局变量的定义和构造
+int inta(1);
+int b(2);
+int e(3);
+int f(4);
+string str("hello world");
+
+//类型定义
+type Persion {
+  string name;
+  int age;
+}
+
+//方法定义
+method(Persion) getName() string {
+  return name;
+}
+
+//函数定义，if语句
+func min(int a, int b) int {
+  if(a > b) {
+    return b;
+  }
+  return a;
+}
+
+//函数定义，while语句
+func sum(int n) int {
+  int i(0);
+  int sum(0);
+  while(true) {
+    if(i > n) {
+      break;
+    }
+    sum = sum + i;
+    i = i + 1;
+  }
+  return sum;
+}
+
+//main函数，程序入口点
+func main() void {
+  Persion p;
+  int b;
+  b = 3;
+  byte b2(0X28);
+  p.name = "pangnan";
+  inta = b + min(e, f);
+  print(inta + sum(10));
+  return;
+}

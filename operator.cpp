@@ -61,10 +61,54 @@ static void register_builtin_minus_operators(Operator& minus) {
   minus.op_funcs_[{"double", "double"}] = minus_double_double;
 }
 
+static Variable* multiply_int_int(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  int64_t v = static_cast<IntVariable*>(v1)->val_ * static_cast<IntVariable*>(v2)->val_;
+  IntVariable* result = new IntVariable;
+  result->type_name_ = "int";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
+
+static Variable* multiply_double_double(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  double v = static_cast<DoubleVariable*>(v1)->val_ * static_cast<DoubleVariable*>(v2)->val_;
+  DoubleVariable* result = new DoubleVariable;
+  result->type_name_ = "double";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
+
 static void register_builtin_multiply_operators(Operator& op) {
+  op.op_funcs_[{"int", "int"}] = multiply_int_int;
+  op.op_funcs_[{"double", "double"}] = multiply_double_double;
+}
+
+static Variable* divide_int_int(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  int64_t v = static_cast<IntVariable*>(v1)->val_ / static_cast<IntVariable*>(v2)->val_;
+  IntVariable* result = new IntVariable;
+  result->type_name_ = "int";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
+
+static Variable* divide_double_double(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  double v = static_cast<DoubleVariable*>(v1)->val_ / static_cast<DoubleVariable*>(v2)->val_;
+  DoubleVariable* result = new DoubleVariable;
+  result->type_name_ = "double";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
 }
 
 static void register_builtin_divide_operators(Operator& op) {
+  op.op_funcs_[{"int", "int"}] = divide_int_int;
+  op.op_funcs_[{"double", "double"}] = divide_double_double;
 }
 
 static Variable* and_bool_bool(Variable* v1, Variable* v2) {
@@ -206,6 +250,56 @@ static void register_builtin_compare_operators(Operator& op) {
   op.op_funcs_[{"bool", "bool"}] = compare_bool_bool;
 }
 
+static Variable* gt_int_int(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  bool v = static_cast<IntVariable*>(v1)->val_ > static_cast<IntVariable*>(v2)->val_;
+  BoolVariable* result = new BoolVariable;
+  result->type_name_ = "bool";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
+
+static Variable* gt_double_double(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  bool v = static_cast<DoubleVariable*>(v1)->val_ > static_cast<DoubleVariable*>(v2)->val_;
+  BoolVariable* result = new BoolVariable;
+  result->type_name_ = "bool";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
+
+static void register_builtin_greater_than_operators(Operator& op) {
+  op.op_funcs_[{"int", "int"}] = gt_int_int;
+  op.op_funcs_[{"double", "double"}] = gt_double_double;
+}
+
+static Variable* lt_int_int(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  bool v = static_cast<IntVariable*>(v1)->val_ < static_cast<IntVariable*>(v2)->val_;
+  BoolVariable* result = new BoolVariable;
+  result->type_name_ = "bool";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
+
+static Variable* lt_double_double(Variable* v1, Variable* v2) {
+  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  bool v = static_cast<DoubleVariable*>(v1)->val_ < static_cast<DoubleVariable*>(v2)->val_;
+  BoolVariable* result = new BoolVariable;
+  result->type_name_ = "bool";
+  result->val_ = v;
+  result->cate_ = Variable::Category::Rvalue;
+  return result;
+}
+
+static void register_builtin_less_than_operators(Operator& op) {
+  op.op_funcs_[{"int", "int"}] = lt_int_int;
+  op.op_funcs_[{"double", "double"}] = lt_double_double;
+}
+
 static void register_builtin_operators(std::unordered_map<TOKEN, Operator>& os) {
   Operator plus(2, TOKEN::PLUS);
   register_builtin_plus_operators(plus);
@@ -240,7 +334,9 @@ static void register_builtin_operators(std::unordered_map<TOKEN, Operator>& os) 
   register_builtin_compare_operators(compare);
 
   Operator greater_than(3, TOKEN::GREATER_THAN);
+  register_builtin_greater_than_operators(greater_than);
   Operator less_than(3, TOKEN::LESS_THAN);
+  register_builtin_less_than_operators(less_than);
   os[TOKEN::ASSIGN] = assign;
   os[TOKEN::COMPARE] = compare;
   os[TOKEN::GREATER_THAN] = greater_than;

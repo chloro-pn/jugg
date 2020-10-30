@@ -205,16 +205,16 @@ std::vector<Token> scan(std::string file) {
       tokens.push_back(CreateToken(TOKEN::DOUBLE_ITERAL, num));
       begin = result[0].second;
     }
-    else if (std::regex_search(begin, end, result, std::regex("[-+]?(0|[1-9][0-9]*)"), std::regex_constants::match_continuous)) {
+    else if (std::regex_search(begin, end, result, std::regex("0X[0-9A-F][0-9A-F]"), std::regex_constants::match_continuous)) {
+      tokens.push_back(CreateToken(TOKEN::BYTE_ITERAL, string_to_uint8_t(result[0].str())));
+      begin = result[0].second;
+    }
+    else if (std::regex_search(begin, end, result, std::regex("[-+]?(0|([1-9][0-9]*))"), std::regex_constants::match_continuous)) {
       int64_t num;
       std::stringstream stream;
       stream << result[0].str();
       stream >> num;
       tokens.push_back(CreateToken(TOKEN::INT_ITERAL, num));
-      begin = result[0].second;
-    }
-    else if (std::regex_search(begin, end, result, std::regex("0X[0-9A-F][0-9A-F]"), std::regex_constants::match_continuous)) {
-      tokens.push_back(CreateToken(TOKEN::BYTE_ITERAL, string_to_uint8_t(result[0].str())));
       begin = result[0].second;
     }
     else if (std::regex_search(begin, end, result, std::regex("[a-zA-Z_][a-zA-Z0-9_]*"), std::regex_constants::match_continuous)) {

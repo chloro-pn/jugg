@@ -34,6 +34,7 @@ static void inner_print(inner_func_context* fc) {
     else {
       assert(false);
     }
+    std::cout << std::endl;
   }
 }
 
