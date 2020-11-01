@@ -8,7 +8,7 @@ struct Operator {
   int level_;
   TOKEN token_;
   struct hash_for_maps {
-    std::size_t operator()(const std::pair<std::string, std::string > &e) const {
+    std::size_t operator()(const std::pair<std::string, std::string> &e) const {
       return std::hash<std::string>()(e.first) + std::hash<std::string>()(e.second);
     }
   };

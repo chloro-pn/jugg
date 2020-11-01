@@ -1,12 +1,13 @@
 #pragma once
 #include <vector>
 #include <cassert>
+#include "comprehensive_type.h"
 
 class Expression;
 
 class Variable {
 public:
-  std::string type_name_;
+  ComprehensiveType type_name_;
   std::string id_name_;
   enum class Category { Lvalue, Rvalue };
   Category cate_;
@@ -102,6 +103,18 @@ public:
   void Assign(Variable*) override;
   Variable* FindMember(const std::string& name) override;
   ~ByteVariable();
+};
+
+class PointerVariable : public Variable {
+public:
+  Variable* ptr_;
+  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  void DefaultConstruct(Variable::Category cate) override;
+  Variable* Copy(Variable::Category cate) override;
+  void ChangeCategory(Variable::Category cate) override;
+  void Assign(Variable*) override;
+  Variable* FindMember(const std::string& name) override;
+  ~PointerVariable();
 };
 
 Variable* CreateVariable(const std::string& type_name);

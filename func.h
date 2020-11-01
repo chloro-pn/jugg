@@ -3,13 +3,15 @@
 #include <string>
 #include <unordered_map>
 #include <cassert>
+#include "comprehensive_type.h"
 #include "variable.h"
 
 class BlockStmt;
 class Func {
  public:
   std::string func_name_;
-  std::vector<std::pair<std::string, std::string>> parameter_type_list_;
+  // {id_name, type_name}
+  std::vector<std::pair<std::string, ComprehensiveType>> parameter_type_list_;
   std::string return_type_;
   BlockStmt* block_;
 };

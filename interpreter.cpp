@@ -86,7 +86,7 @@ Variable* Interpreter::FindVariableByName(const std::string& name) {
 void Interpreter::Exec() {
   //全局变量的构造
   for (auto& each : global_var_) {
-    Variable* v = CreateVariable(each->type_name_);
+    Variable* v = CreateVariable(each->type_name_.base_type_);
     v->id_name_ = each->var_name_;
     v->type_name_ = each->type_name_;
     v->ConstructByExpression(each->constructors_, Variable::Category::Lvalue);
@@ -146,7 +146,7 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
 }
 
 Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name, const std::vector<Variable*>& variables) {
-  Type& type = TypeSet::instance().Get(obj->type_name_);
+  Type& type = TypeSet::instance().Get(obj->type_name_.base_type_);
   assert(type.methods_.find(method_name) != type.methods_.end());
   Method& method = type.methods_[method_name];
   MethodContext* mc = new MethodContext;

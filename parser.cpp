@@ -391,9 +391,9 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
   }
 }
 
-std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
+std::vector<std::pair<std::string, ComprehensiveType>> ParseParameterList(const std::vector<Token>& tokens, size_t begin, size_t end) {
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
-  std::vector<std::pair<std::string, std::string>> result;
+  std::vector<std::pair<std::string, ComprehensiveType>> result;
   if (begin + 1 == end) {
     return result;
   }
@@ -406,7 +406,9 @@ std::vector<std::pair<std::string, std::string>> ParseParameterList(const std::v
     assert(tokens[index + 1].token == TOKEN::ID && tokens[index + 1].type == Token::TYPE::STRING);
     std::string type_name = tokens[index].get<std::string>();
     std::string var_name = tokens[index + 1].get<std::string>();
-    result.push_back({ var_name, type_name });
+    ComprehensiveType tmp;
+    tmp.base_type_ = type_name;
+    result.push_back({ var_name, tmp });
     index += 2;
     assert(tokens[index].token == TOKEN::COMMA || tokens[index].token == TOKEN::RIGHT_PARENTHESIS);
     if (tokens[index].token == TOKEN::COMMA) {
@@ -511,9 +513,11 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
     assert(TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
     std::string type_name = tokens[begin].get<std::string>();
     ++begin;
+    ComprehensiveType ct;
+    ct.base_type_ = type_name;
     assert(tokens[begin].type == Token::TYPE::STRING);
     std::string var_name = tokens[begin].get<std::string>();
-    result.RegisterData(var_name, type_name);
+    result.RegisterData(var_name, ct);
     ++begin;
     assert(tokens[begin].token == TOKEN::SEMICOLON);
     ++begin;
@@ -529,7 +533,9 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   VariableDefineStmt* result = new VariableDefineStmt;
   assert(tokens[begin].type == Token::TYPE::STRING);
-  result->type_name_ = tokens[begin].get<std::string>();
+  ComprehensiveType ct;
+  ct.base_type_ = tokens[begin].get<std::string>();
+  result->type_name_ = ct;
   ++begin;
   assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
   result->var_name_ = tokens[begin].get<std::string>();

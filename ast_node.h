@@ -6,6 +6,7 @@
 #include "operator.h"
 #include "variable.h"
 #include "interpreter.h"
+#include "comprehensive_type.h"
 
 class AstNode {
  public:
@@ -373,14 +374,14 @@ class ExpressionStmt : public Statement {
 
 class VariableDefineStmt : public Statement {
  public:
-  std::string type_name_;
+  ComprehensiveType type_name_;
   std::string var_name_;
   std::vector<Expression*> constructors_;
 
   State exec() override {
     //解释器在当前上下文定义变量
-    Variable* v = CreateVariable(type_name_);
-    v->type_name_ = type_name_;
+    Variable* v = CreateVariable(type_name_.base_type_);
+    v->type_name_ = type_name_.base_type_;
     v->id_name_ = var_name_;
     //显式定义的变量都是左值。
     v->ConstructByExpression(constructors_, Variable::Category::Lvalue);

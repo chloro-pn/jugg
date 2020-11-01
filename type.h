@@ -6,12 +6,13 @@
 #include <algorithm>
 #include "variable.h"
 #include "func.h"
+#include "comprehensive_type.h"
 
 class Method {
 public:
   std::string type_name_;
   std::string method_name_;
-  std::vector<std::pair<std::string, std::string>> parameter_type_list_;
+  std::vector<std::pair<std::string, ComprehensiveType>> parameter_type_list_;
   std::string return_type_;
   BlockStmt* block_;
 };
@@ -21,7 +22,7 @@ class Type {
  public:
   std::string type_name_;
   // {var_name, type_name}
-  std::vector<std::pair<std::string, std::string>> datas_;
+  std::vector<std::pair<std::string, ComprehensiveType>> datas_;
   std::unordered_map<std::string, Method> methods_;
 
   explicit Type(const std::string& str = "") : type_name_(str) {
@@ -32,8 +33,8 @@ class Type {
     return methods_.find(name) != methods_.end();
   }
 
-  void RegisterData(const std::string& var_name, const std::string& type_name) {
-    auto it = std::find_if(datas_.begin(), datas_.end(), [&](const std::pair<std::string, std::string>& each)->bool {
+  void RegisterData(const std::string& var_name, const ComprehensiveType& type_name) {
+    auto it = std::find_if(datas_.begin(), datas_.end(), [&](const std::pair<std::string, ComprehensiveType>& each)->bool {
       return each.first == var_name;
     });
     assert(it == datas_.end());
