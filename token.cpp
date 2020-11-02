@@ -77,6 +77,8 @@ const char* GetTokenStr(TOKEN token) {
     return ">";
   case TOKEN::LESS_THAN:
     return "<";
+  case TOKEN::ADDRESS_OF:
+    return "&";
   case TOKEN::STRING_ITERAL:
     return "string_iteral";
   case TOKEN::TRUE:

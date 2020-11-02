@@ -117,4 +117,4 @@ public:
   ~PointerVariable();
 };
 
-Variable* CreateVariable(const std::string& type_name);
+Variable* CreateVariable(const ComprehensiveType& type_name);

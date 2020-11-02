@@ -69,7 +69,7 @@ ComprehensiveType ParseComprehensiveType(const std::vector<Token>& tokens, size_
     }
     else if (tokens[begin].token == TOKEN::LEFT_BRACKETS) {
       ++begin;
-      assert(tokens[begin].token == TOKEN::RIGHT_BRACE);
+      assert(tokens[begin].token == TOKEN::RIGHT_BRACKETS);
       ++begin;
       result.modifiers_.push_back(ComprehensiveType::Modifier::Array);
       continue;

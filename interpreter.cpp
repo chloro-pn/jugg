@@ -86,7 +86,7 @@ Variable* Interpreter::FindVariableByName(const std::string& name) {
 void Interpreter::Exec() {
   //全局变量的构造
   for (auto& each : global_var_) {
-    Variable* v = CreateVariable(each->type_name_.base_type_);
+    Variable* v = CreateVariable(each->type_name_);
     v->id_name_ = each->var_name_;
     v->type_name_ = each->type_name_;
     v->ConstructByExpression(each->constructors_, Variable::Category::Lvalue);

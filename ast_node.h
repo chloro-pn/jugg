@@ -397,7 +397,7 @@ class VariableDefineStmt : public Statement {
 
   State exec() override {
     //解释器在当前上下文定义变量
-    Variable* v = CreateVariable(type_name_.base_type_);
+    Variable* v = CreateVariable(type_name_);
     v->type_name_ = type_name_;
     v->id_name_ = var_name_;
     //显式定义的变量都是左值。

@@ -56,6 +56,8 @@ enum class TOKEN {
   COMPARE,
   GREATER_THAN,
   LESS_THAN,
+  //»°µÿ÷∑
+  ADDRESS_OF,
 
   ID,
   STRING_ITERAL,

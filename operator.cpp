@@ -358,6 +358,19 @@ void register_builtin_uoperators(std::unordered_map<TOKEN, UnaryOperator>& os) {
     return static_cast<PointerVariable*>(v)->ptr_;
   };
   os[TOKEN::MULTIPLY] = deref;
+
+  UnaryOperator addressof;
+  addressof.token_ = TOKEN::ADDRESS_OF;
+  addressof.func_ = [](Variable* v)->Variable* {
+    PointerVariable* result = new PointerVariable;
+    result->cate_ = Variable::Category::Rvalue;
+    result->id_name_ = "tmp";
+    result->ptr_ = v;
+    result->type_name_ = v->type_name_;
+    result->type_name_.modifiers_.push_back(ComprehensiveType::Modifier::Pointer);
+    return result;
+  };
+  os[TOKEN::ADDRESS_OF] = addressof;
 }
 
 OperatorSet::OperatorSet() {

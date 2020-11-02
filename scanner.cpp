@@ -169,6 +169,10 @@ std::vector<Token> scan(std::string file) {
       tokens.push_back(CreateToken(TOKEN::AND));
       begin = result[0].second;
     }
+    else if (std::regex_search(begin, end, result, std::regex("&"), std::regex_constants::match_continuous)) {
+      tokens.push_back(CreateToken(TOKEN::ADDRESS_OF));
+      begin = result[0].second;
+    }
     else if (std::regex_search(begin, end, result, std::regex("\\|\\|"), std::regex_constants::match_continuous)) {
       tokens.push_back(CreateToken(TOKEN::OR));
       begin = result[0].second;

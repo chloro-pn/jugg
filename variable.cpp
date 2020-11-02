@@ -2,20 +2,29 @@
 #include "type.h"
 #include "ast_node.h"
 
-Variable* CreateVariable(const std::string& type_name) {
-  if (type_name == "string") {
+Variable* CreateVariable(const ComprehensiveType& type_name) {
+  if (type_name.BaseType() == false) {
+    if (type_name.modifiers_.back() == ComprehensiveType::Modifier::Pointer) {
+      return new PointerVariable;
+    }
+    else {
+      //ÔÝÇÒ²»¿¼ÂÇ
+      assert(false);
+    }
+  }
+  if (type_name.base_type_ == "string") {
     return new StringVariable;
   }
-  else if (type_name == "int") {
+  else if (type_name.base_type_ == "int") {
     return new IntVariable;
   }
-  else if (type_name == "double") {
+  else if (type_name.base_type_ == "double") {
     return new DoubleVariable;
   }
-  else if (type_name == "bool") {
+  else if (type_name.base_type_ == "bool") {
     return new BoolVariable;
   }
-  else if (type_name == "byte") {
+  else if (type_name.base_type_ == "byte") {
     return new ByteVariable;
   }
   return new AbstractVariable;
@@ -52,7 +61,7 @@ void AbstractVariable::DefaultConstruct(Variable::Category cate) {
   Type& type = TypeSet::instance().Get(type_name_.base_type_);
   size_t count = type.datas_.size();
   for (size_t i = 0; i < count; ++i) {
-    Variable* v = CreateVariable(type.datas_[i].second.base_type_);
+    Variable* v = CreateVariable(type.datas_[i].second);
     v->type_name_ = type.datas_[i].second;
     v->id_name_ = type.datas_[i].first;
     v->DefaultConstruct(cate);
@@ -337,9 +346,9 @@ void PointerVariable::ConstructByExpression(const std::vector<Expression*>& cs, 
   }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
-  assert(v->cate_ == Variable::Category::Lvalue);
   assert(v->type_name_ == type_name_);
-  ptr_ = v;
+  Assign(v);
+  cate_ = cate;
 }
 
 void PointerVariable::DefaultConstruct(Variable::Category cate) {
