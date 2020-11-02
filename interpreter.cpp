@@ -16,19 +16,19 @@ static void inner_print(inner_func_context* fc) {
   fc->return_var_ = new VoidVariable;
   fc->return_var_->id_name_ = "void";
   for (auto& each : fc->vars_) {
-    if (each->type_name_ == "int") {
+    if (each->type_name_.base_type_ == "int") {
       std::cout << static_cast<IntVariable*>(each)->val_;
     }
-    else if (each->type_name_ == "string") {
+    else if (each->type_name_.base_type_ == "string") {
       std::cout << static_cast<StringVariable*>(each)->val_;
     }
-    else if (each->type_name_ == "double") {
+    else if (each->type_name_.base_type_ == "double") {
       std::cout << static_cast<DoubleVariable*>(each)->val_;
     }
-    else if (each->type_name_ == "bool") {
+    else if (each->type_name_.base_type_ == "bool") {
       std::cout << static_cast<BoolVariable*>(each)->val_;
     }
-    else if (each->type_name_ == "byte") {
+    else if (each->type_name_.base_type_ == "byte") {
       std::cout << static_cast<ByteVariable*>(each)->val_;
     }
     else {
@@ -39,12 +39,12 @@ static void inner_print(inner_func_context* fc) {
 }
 
 static void inner_len(inner_func_context* fc) {
-  assert(fc->vars_.size() == 1 && fc->vars_[0]->type_name_ == "string");
+  assert(fc->vars_.size() == 1 && fc->vars_[0]->type_name_.base_type_ == "string");
   size_t i = static_cast<StringVariable*>(fc->vars_[0])->val_.size();
   IntVariable* v = new IntVariable;
   v->cate_ = Variable::Category::Rvalue;
   v->id_name_ = "tmp";
-  v->type_name_ = "int";
+  v->type_name_.base_type_ = "int";
   v->val_ = i;
   fc->return_var_ = v;
 }
@@ -93,7 +93,7 @@ void Interpreter::Exec() {
     global_context_->vars_[v->id_name_] = v;
   }
   Variable* v = CallFunc("main", {});
-  assert(v->type_name_ == "void");
+  assert(v->type_name_.base_type_ == "void");
   delete v;
   assert(context_.size() == 0);
   //全局变量的析构

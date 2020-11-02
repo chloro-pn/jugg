@@ -1,30 +1,30 @@
 #include "operator.h"
 
 static Variable* plus_int_int(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  assert(v1->type_name_.base_type_ == "int" && v2->type_name_.base_type_ == "int");
   int64_t v = static_cast<IntVariable*>(v1)->val_ + static_cast<IntVariable*>(v2)->val_;
   IntVariable* result = new IntVariable;
-  result->type_name_ = "int";
+  result->type_name_.base_type_ = "int";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
 }
 
 static Variable* plus_string_string(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "string" && v2->type_name_ == "string");
+  assert(v1->type_name_.base_type_ == "string" && v2->type_name_.base_type_ == "string");
   std::string v = static_cast<StringVariable*>(v1)->val_ + static_cast<StringVariable*>(v2)->val_;
   StringVariable* result = new StringVariable;
-  result->type_name_ = "string";
+  result->type_name_.base_type_ = "string";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
 }
 
 static Variable* plus_double_double(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  assert(v1->type_name_.base_type_ == "double" && v2->type_name_.base_type_ == "double");
   double v = static_cast<DoubleVariable*>(v1)->val_ + static_cast<DoubleVariable*>(v2)->val_;
   DoubleVariable* result = new DoubleVariable;
-  result->type_name_ = "double";
+  result->type_name_.base_type_ = "double";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -37,20 +37,20 @@ static void register_builtin_plus_operators(Operator& plus) {
 }
 
 static Variable* minus_int_int(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  assert(v1->type_name_.base_type_ == "int" && v2->type_name_.base_type_ == "int");
   int64_t v = static_cast<IntVariable*>(v1)->val_ - static_cast<IntVariable*>(v2)->val_;
   IntVariable* result = new IntVariable;
-  result->type_name_ = "int";
+  result->type_name_.base_type_ = "int";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
 }
 
 static Variable* minus_double_double(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  assert(v1->type_name_.base_type_ == "double" && v2->type_name_.base_type_ == "double");
   double v = static_cast<DoubleVariable*>(v1)->val_ - static_cast<DoubleVariable*>(v2)->val_;
   DoubleVariable* result = new DoubleVariable;
-  result->type_name_ = "double";
+  result->type_name_.base_type_ = "double";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -62,20 +62,20 @@ static void register_builtin_minus_operators(Operator& minus) {
 }
 
 static Variable* multiply_int_int(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  assert(v1->type_name_.base_type_ == "int" && v2->type_name_.base_type_ == "int");
   int64_t v = static_cast<IntVariable*>(v1)->val_ * static_cast<IntVariable*>(v2)->val_;
   IntVariable* result = new IntVariable;
-  result->type_name_ = "int";
+  result->type_name_.base_type_ = "int";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
 }
 
 static Variable* multiply_double_double(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  assert(v1->type_name_.base_type_ == "double" && v2->type_name_.base_type_ == "double");
   double v = static_cast<DoubleVariable*>(v1)->val_ * static_cast<DoubleVariable*>(v2)->val_;
   DoubleVariable* result = new DoubleVariable;
-  result->type_name_ = "double";
+  result->type_name_.base_type_ = "double";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -87,20 +87,20 @@ static void register_builtin_multiply_operators(Operator& op) {
 }
 
 static Variable* divide_int_int(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  assert(v1->type_name_.base_type_ == "int" && v2->type_name_.base_type_ == "int");
   int64_t v = static_cast<IntVariable*>(v1)->val_ / static_cast<IntVariable*>(v2)->val_;
   IntVariable* result = new IntVariable;
-  result->type_name_ = "int";
+  result->type_name_.base_type_ = "int";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
 }
 
 static Variable* divide_double_double(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  assert(v1->type_name_.base_type_ == "double" && v2->type_name_.base_type_ == "double");
   double v = static_cast<DoubleVariable*>(v1)->val_ / static_cast<DoubleVariable*>(v2)->val_;
   DoubleVariable* result = new DoubleVariable;
-  result->type_name_ = "double";
+  result->type_name_.base_type_ = "double";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -112,10 +112,10 @@ static void register_builtin_divide_operators(Operator& op) {
 }
 
 static Variable* and_bool_bool(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "bool" && v2->type_name_ == "bool");
+  assert(v1->type_name_.base_type_ == "bool" && v2->type_name_.base_type_ == "bool");
   bool b = static_cast<BoolVariable*>(v1)->val_ && static_cast<BoolVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_= "bool";
   result->val_ = b;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -126,10 +126,10 @@ static void register_builtin_and_operators(Operator& op) {
 }
 
 static Variable* or_bool_bool(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "bool" && v2->type_name_ == "bool");
+  assert(v1->type_name_.base_type_ == "bool" && v2->type_name_.base_type_ == "bool");
   bool b = static_cast<BoolVariable*>(v1)->val_ || static_cast<BoolVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   result->val_ = b;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -158,12 +158,12 @@ static void register_builtin_assign_operators(Operator& op) {
 }
 
 static Variable* compare_int_int(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  assert(v1->type_name_.base_type_ == "int" && v2->type_name_.base_type_ == "int");
   int64_t n1 = static_cast<IntVariable*>(v1)->val_;
   int64_t n2 = static_cast<IntVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->cate_ = Variable::Category::Rvalue;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   if (n1 == n2) {
     result->val_ = true;
   }
@@ -175,12 +175,12 @@ static Variable* compare_int_int(Variable* v1, Variable* v2) {
 }
 
 static Variable* compare_string_string(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "string" && v2->type_name_ == "string");
+  assert(v1->type_name_.base_type_ == "string" && v2->type_name_.base_type_ == "string");
   std::string& s1 = static_cast<StringVariable*>(v1)->val_;
   std::string& s2 = static_cast<StringVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->cate_ = Variable::Category::Rvalue;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   if (s1 == s2) {
     result->val_ = true;
   }
@@ -192,12 +192,12 @@ static Variable* compare_string_string(Variable* v1, Variable* v2) {
 }
 
 static Variable* compare_byte_byte(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "byte" && v2->type_name_ == "byte");
+  assert(v1->type_name_.base_type_ == "byte" && v2->type_name_.base_type_ == "byte");
   uint8_t c1 = static_cast<ByteVariable*>(v1)->val_;
   uint8_t c2 = static_cast<ByteVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->cate_ = Variable::Category::Rvalue;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   if (c1 == c2) {
     result->val_ = true;
   }
@@ -209,12 +209,12 @@ static Variable* compare_byte_byte(Variable* v1, Variable* v2) {
 }
 
 static Variable* compare_double_double(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  assert(v1->type_name_.base_type_ == "double" && v2->type_name_.base_type_ == "double");
   double d1 = static_cast<DoubleVariable*>(v1)->val_;
   double d2 = static_cast<DoubleVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->cate_ = Variable::Category::Rvalue;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   if (d1 == d2) {
     result->val_ = true;
   }
@@ -226,12 +226,12 @@ static Variable* compare_double_double(Variable* v1, Variable* v2) {
 }
 
 static Variable* compare_bool_bool(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "bool" && v2->type_name_ == "bool");
+  assert(v1->type_name_.base_type_ == "bool" && v2->type_name_.base_type_ == "bool");
   bool b1 = static_cast<BoolVariable*>(v1)->val_;
   bool b2 = static_cast<BoolVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->cate_ = Variable::Category::Rvalue;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   if (b1 == b2) {
     result->val_ = true;
   }
@@ -251,20 +251,20 @@ static void register_builtin_compare_operators(Operator& op) {
 }
 
 static Variable* gt_int_int(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  assert(v1->type_name_.base_type_ == "int" && v2->type_name_.base_type_ == "int");
   bool v = static_cast<IntVariable*>(v1)->val_ > static_cast<IntVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
 }
 
 static Variable* gt_double_double(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  assert(v1->type_name_.base_type_ == "double" && v2->type_name_.base_type_ == "double");
   bool v = static_cast<DoubleVariable*>(v1)->val_ > static_cast<DoubleVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -276,20 +276,20 @@ static void register_builtin_greater_than_operators(Operator& op) {
 }
 
 static Variable* lt_int_int(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "int" && v2->type_name_ == "int");
+  assert(v1->type_name_.base_type_ == "int" && v2->type_name_.base_type_ == "int");
   bool v = static_cast<IntVariable*>(v1)->val_ < static_cast<IntVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
 }
 
 static Variable* lt_double_double(Variable* v1, Variable* v2) {
-  assert(v1->type_name_ == "double" && v2->type_name_ == "double");
+  assert(v1->type_name_.base_type_ == "double" && v2->type_name_.base_type_ == "double");
   bool v = static_cast<DoubleVariable*>(v1)->val_ < static_cast<DoubleVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;

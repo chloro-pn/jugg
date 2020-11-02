@@ -98,8 +98,8 @@ class BinaryExpr : public Expression {
     Variable* v1 = left_->GetVariable();
     Variable* v2 = right_->GetVariable();
     //运算符可以处理这两个类型的变量
-    assert(OperatorSet::instance().Get(operator_token_).FindOpFuncs(v1->type_name_, v2->type_name_) == true);
-    Variable* result = OperatorSet::instance().Get(operator_token_).op_funcs_[{v1->type_name_, v2->type_name_}](v1, v2);
+    assert(OperatorSet::instance().Get(operator_token_).FindOpFuncs(v1->type_name_.base_type_, v2->type_name_.base_type_) == true);
+    Variable* result = OperatorSet::instance().Get(operator_token_).op_funcs_[{v1->type_name_.base_type_, v2->type_name_.base_type_}](v1, v2);
     if (v1->cate_ == Variable::Category::Rvalue) {
       delete v1;
     }
@@ -126,7 +126,7 @@ class StringIteralExpr : public Expression {
 
   Variable* GetVariable() override {
     StringVariable* v = new StringVariable;
-    v->type_name_ = "string";
+    v->type_name_.base_type_ = "string";
     v->val_ = str_;
     v->cate_ = Variable::Category::Rvalue;
     return v;
@@ -139,7 +139,7 @@ public:
 
   Variable* GetVariable() override {
     IntVariable* v = new IntVariable;
-    v->type_name_ = "int";
+    v->type_name_.base_type_ = "int";
     v->val_ = int_;
     v->cate_ = Variable::Category::Rvalue;
     return v;
@@ -151,7 +151,7 @@ public:
   double d_;
   virtual Variable* GetVariable() override {
     DoubleVariable* v = new DoubleVariable;
-    v->type_name_ = "double";
+    v->type_name_.base_type_ = "double";
     v->val_ = d_;
     v->cate_ = Variable::Category::Rvalue;
     return v;
@@ -163,7 +163,7 @@ public:
   bool b_;
   virtual Variable* GetVariable() override {
     BoolVariable* v = new BoolVariable;
-    v->type_name_ = "bool";
+    v->type_name_.base_type_ = "bool";
     v->val_ = b_;
     v->cate_ = Variable::Category::Rvalue;
     return v;
@@ -175,7 +175,7 @@ public:
   uint8_t c_;
   virtual Variable* GetVariable() override {
     ByteVariable* v = new ByteVariable;
-    v->type_name_ = "byte";
+    v->type_name_.base_type_ = "byte";
     v->val_ = c_;
     v->cate_ = Variable::Category::Rvalue;
     return v;
@@ -232,7 +232,7 @@ class ForStmt : public Statement {
     init_->GetVariable();
     while (true) {
       Variable* v = check_->GetVariable();
-      assert(v->type_name_ == "bool");
+      assert(v->type_name_.base_type_ == "bool");
       bool check = static_cast<BoolVariable*>(v)->val_;
       if (v->cate_ == Variable::Category::Rvalue) {
         delete v;
@@ -267,7 +267,7 @@ class IfStmt : public Statement {
 
   State exec() override {
     Variable* v = check_->GetVariable();
-    assert(v->type_name_ == "bool");
+    assert(v->type_name_.base_type_ == "bool");
     bool check = static_cast<BoolVariable*>(v)->val_;
     if (v->cate_ == Variable::Category::Rvalue) {
       delete v;
@@ -296,7 +296,7 @@ class WhileStmt : public Statement {
   State exec() override {
     while (true) {
       Variable* v = check_->GetVariable();
-      assert(v->type_name_ == "bool");
+      assert(v->type_name_.base_type_ == "bool");
       bool check = static_cast<BoolVariable*>(v)->val_;
       if (v->cate_ == Variable::Category::Rvalue) {
         delete v;
@@ -353,7 +353,7 @@ class ReturnStmt : public Statement {
     }
     else {
       *return_var_ = new VoidVariable;
-      (*return_var_)->type_name_ = "void";
+      (*return_var_)->type_name_.base_type_ = "void";
     }
     return State::Return;
   }
@@ -381,7 +381,7 @@ class VariableDefineStmt : public Statement {
   State exec() override {
     //解释器在当前上下文定义变量
     Variable* v = CreateVariable(type_name_.base_type_);
-    v->type_name_ = type_name_.base_type_;
+    v->type_name_ = type_name_;
     v->id_name_ = var_name_;
     //显式定义的变量都是左值。
     v->ConstructByExpression(constructors_, Variable::Category::Lvalue);

@@ -441,7 +441,7 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 
   //函数返回值的类型在类型系统中可以找到。
   assert(tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
-  result.return_type_ = tokens[begin].get<std::string>();
+  result.return_type_.base_type_ = tokens[begin].get<std::string>();
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
@@ -478,7 +478,7 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
 
   //函数返回值的类型在类型系统中可以找到。
   assert(tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
-  result.return_type_ = tokens[begin].get<std::string>();
+  result.return_type_.base_type_ = tokens[begin].get<std::string>();
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);

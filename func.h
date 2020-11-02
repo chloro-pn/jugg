@@ -12,7 +12,7 @@ class Func {
   std::string func_name_;
   // {id_name, type_name}
   std::vector<std::pair<std::string, ComprehensiveType>> parameter_type_list_;
-  std::string return_type_;
+  ComprehensiveType return_type_;
   BlockStmt* block_;
 };
 

@@ -27,11 +27,11 @@ void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs,
     DefaultConstruct(cate);
     return;
   }
-  Type& type = TypeSet::instance().Get(type_name_);
+  Type& type = TypeSet::instance().Get(type_name_.base_type_);
   assert(type.datas_.size() == cs.size());
   for (size_t index = 0; index < cs.size(); ++index) {
     Variable* v = cs[index]->GetVariable();
-    assert(v->type_name_ == type.datas_[index].second.base_type_);
+    assert(v->type_name_ == type.datas_[index].second);
     v->id_name_ = type.datas_[index].first;
     if (v->cate_ == Variable::Category::Lvalue) {
       Variable* tmp = v->Copy(cate);
@@ -49,11 +49,11 @@ void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs,
 //type_name和id_name应该已经被设置
 void AbstractVariable::DefaultConstruct(Variable::Category cate) {
   cate_ = cate;
-  Type& type = TypeSet::instance().Get(type_name_);
+  Type& type = TypeSet::instance().Get(type_name_.base_type_);
   size_t count = type.datas_.size();
   for (size_t i = 0; i < count; ++i) {
     Variable* v = CreateVariable(type.datas_[i].second.base_type_);
-    v->type_name_ = type.datas_[i].second.base_type_;
+    v->type_name_ = type.datas_[i].second;
     v->id_name_ = type.datas_[i].first;
     v->DefaultConstruct(cate);
     members_.push_back(v);
@@ -107,7 +107,7 @@ void StringVariable::ConstructByExpression(const std::vector<Expression*>& cs, V
   }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
-  assert(v->type_name_ == "string");
+  assert(v->type_name_.base_type_ == "string");
   val_ = static_cast<StringVariable*>(v)->val_;
   cate_ = cate;
   if (v->cate_ == Variable::Category::Rvalue) {
@@ -122,7 +122,7 @@ void StringVariable::DefaultConstruct(Variable::Category cate) {
 
 Variable* StringVariable::Copy(Variable::Category cate) {
   StringVariable* result = new StringVariable;
-  result->type_name_ = "string";
+  result->type_name_.base_type_ = "string";
   result->id_name_ = id_name_;
   result->cate_ = cate;
   result->val_ = static_cast<StringVariable*>(this)->val_;
@@ -134,7 +134,7 @@ void StringVariable::ChangeCategory(Variable::Category cate) {
 }
 
 void StringVariable::Assign(Variable* v) {
-  assert("string" == v->type_name_);
+  assert("string" == v->type_name_.base_type_);
   val_ = static_cast<StringVariable*>(v)->val_;
 }
 
@@ -153,7 +153,7 @@ void IntVariable::ConstructByExpression(const std::vector<Expression*>& cs, Vari
   }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
-  assert(v->type_name_ == "int");
+  assert(v->type_name_.base_type_ == "int");
   val_ = static_cast<IntVariable*>(v)->val_;
   cate_ = cate;
   if (v->cate_ == Variable::Category::Rvalue) {
@@ -168,7 +168,7 @@ void IntVariable::DefaultConstruct(Variable::Category cate) {
 
 Variable* IntVariable::Copy(Variable::Category cate) {
   IntVariable* result = new IntVariable;
-  result->type_name_ = "int";
+  result->type_name_.base_type_ = "int";
   result->id_name_ = id_name_;
   result->cate_ = cate;
   result->val_ = static_cast<IntVariable*>(this)->val_;
@@ -180,7 +180,7 @@ void IntVariable::ChangeCategory(Variable::Category cate) {
 }
 
 void IntVariable::Assign(Variable* v) {
-  assert("int" == v->type_name_);
+  assert("int" == v->type_name_.base_type_);
   val_ = static_cast<IntVariable*>(v)->val_;
 }
 
@@ -199,7 +199,7 @@ void DoubleVariable::ConstructByExpression(const std::vector<Expression*>& cs, V
   }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
-  assert(v->type_name_ == "double");
+  assert(v->type_name_.base_type_ == "double");
   val_ = static_cast<DoubleVariable*>(v)->val_;
   cate_ = cate;
   if (v->cate_ == Variable::Category::Rvalue) {
@@ -214,7 +214,7 @@ void DoubleVariable::DefaultConstruct(Variable::Category cate) {
 
 Variable* DoubleVariable::Copy(Variable::Category cate) {
   DoubleVariable* result = new DoubleVariable;
-  result->type_name_ = "double";
+  result->type_name_.base_type_ = "double";
   result->id_name_ = id_name_;
   result->cate_ = cate;
   result->val_ = static_cast<DoubleVariable*>(this)->val_;
@@ -226,7 +226,7 @@ void DoubleVariable::ChangeCategory(Variable::Category cate) {
 }
 
 void DoubleVariable::Assign(Variable* v) {
-  assert("double" == v->type_name_ || "int" == v->type_name_);
+  assert("double" == v->type_name_.base_type_ || "int" == v->type_name_.base_type_);
   val_ = static_cast<DoubleVariable*>(v)->val_;
 }
 
@@ -245,7 +245,7 @@ void BoolVariable::ConstructByExpression(const std::vector<Expression*>& cs, Var
   }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
-  assert(v->type_name_ == "bool");
+  assert(v->type_name_.base_type_ == "bool");
   val_ = static_cast<BoolVariable*>(v)->val_;
   cate_ = cate;
   if (v->cate_ == Variable::Category::Rvalue) {
@@ -260,7 +260,7 @@ void BoolVariable::DefaultConstruct(Variable::Category cate) {
 
 Variable* BoolVariable::Copy(Variable::Category cate) {
   BoolVariable* result = new BoolVariable;
-  result->type_name_ = "bool";
+  result->type_name_.base_type_ = "bool";
   result->id_name_ = id_name_;
   result->cate_ = cate;
   result->val_ = static_cast<BoolVariable*>(this)->val_;
@@ -272,7 +272,7 @@ void BoolVariable::ChangeCategory(Variable::Category cate) {
 }
 
 void BoolVariable::Assign(Variable* v) {
-  assert("double" == v->type_name_);
+  assert("double" == v->type_name_.base_type_);
   val_ = static_cast<BoolVariable*>(v)->val_;
 }
 
@@ -291,7 +291,7 @@ void ByteVariable::ConstructByExpression(const std::vector<Expression*>& cs, Var
   }
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
-  assert(v->type_name_ == "byte");
+  assert(v->type_name_.base_type_ == "byte");
   val_ = static_cast<ByteVariable*>(v)->val_;
   cate_ = cate;
   if (v->cate_ == Variable::Category::Rvalue) {
@@ -306,7 +306,7 @@ void ByteVariable::DefaultConstruct(Variable::Category cate) {
 
 Variable* ByteVariable::Copy(Variable::Category cate) {
   ByteVariable* result = new ByteVariable;
-  result->type_name_ = "byte";
+  result->type_name_.base_type_ = "byte";
   result->id_name_ = id_name_;
   result->cate_ = cate;
   result->val_ = static_cast<ByteVariable*>(this)->val_;
@@ -318,7 +318,7 @@ void ByteVariable::ChangeCategory(Variable::Category cate) {
 }
 
 void ByteVariable::Assign(Variable* v) {
-  assert("byte" == v->type_name_);
+  assert("byte" == v->type_name_.base_type_);
   val_ = static_cast<ByteVariable*>(v)->val_;
 }
 

@@ -13,7 +13,7 @@ public:
   std::string type_name_;
   std::string method_name_;
   std::vector<std::pair<std::string, ComprehensiveType>> parameter_type_list_;
-  std::string return_type_;
+  ComprehensiveType return_type_;
   BlockStmt* block_;
 };
 
