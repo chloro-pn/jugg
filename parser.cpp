@@ -55,6 +55,31 @@ size_t FindNextCommaOrEnd(const std::vector<Token>& tokens, size_t begin, size_t
   return -1;
 }
 
+ComprehensiveType ParseComprehensiveType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
+  assert(tokens[begin].type == Token::TYPE::STRING);
+  assert(TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
+  ComprehensiveType result;
+  result.base_type_ = tokens[begin].get<std::string>();
+  ++begin;
+  while (true) {
+    if (tokens[begin].token == TOKEN::MULTIPLY) {
+      result.modifiers_.push_back(ComprehensiveType::Modifier::Pointer);
+      ++begin;
+      continue;
+    }
+    else if (tokens[begin].token == TOKEN::LEFT_BRACKETS) {
+      ++begin;
+      assert(tokens[begin].token == TOKEN::RIGHT_BRACE);
+      ++begin;
+      result.modifiers_.push_back(ComprehensiveType::Modifier::Array);
+      continue;
+    }
+    break;
+  }
+  end = begin;
+  return result;
+}
+
 //level值越大，优先级越低
 static int CompareOperatorLevel(TOKEN t1, TOKEN t2) {
   if (OperatorSet::instance().GetLevel(t1) > OperatorSet::instance().GetLevel(t2)) {
@@ -132,6 +157,7 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
   }
   std::stack<Expression*> operands;
   std::stack<TOKEN> operators;
+  std::stack<TOKEN> unary_operators;
   for (size_t i = begin; i < end; ++i) {
     TOKEN current_token = tokens[i].token;
     // 左括号特殊处理，因为其改变了运算优先级
@@ -144,16 +170,24 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
     }
     // 所有的右括号TOKEN应该被跳过
     assert(current_token != TOKEN::RIGHT_PARENTHESIS);
+    // 不是运算符
     if (OperatorSet::instance().Find(current_token) == false) {
+      Expression* expr = nullptr;
       //函数调用表达式
       if (tokens[i].type == Token::TYPE::STRING && (
         FuncSet::instance().Find(tokens[i].get<std::string>()) == true || 
         Interpreter::instance().FindInnerFunc(tokens[i].get<std::string>()) == true)) {
         assert(tokens[i + 1].token == TOKEN::LEFT_PARENTHESIS);
         size_t match_parent = FindMatchedParenthesis(tokens, i + 1);
-        operands.push(ParseFuncCallExpr(tokens, i, match_parent));
+        expr = ParseFuncCallExpr(tokens, i, match_parent);
+        if (unary_operators.empty() == false) {
+          UnaryExpr* tmp = new UnaryExpr;
+          tmp->child_ = expr;
+          tmp->operator_token_ = unary_operators.top();
+          unary_operators.pop();
+          expr = tmp;
+        }
         i = match_parent;
-        continue;
       }
       //成员访问表达式
       else if (i + 1 < tokens.size() && tokens[i + 1].token == TOKEN::DECIMAL_POINT) {
@@ -161,62 +195,90 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         //         i i+1 i+2 i+3
         if (i + 3 < tokens.size() && tokens[i + 3].token == TOKEN::LEFT_PARENTHESIS) {
           size_t match_parent = FindMatchedParenthesis(tokens, i + 3);
-          operands.push(ParseMethodCallExpr(tokens, i, match_parent));
+          expr = ParseMethodCallExpr(tokens, i, match_parent);
+          if (unary_operators.empty() == false) {
+            UnaryExpr* tmp = new UnaryExpr;
+            tmp->child_ = expr;
+            tmp->operator_token_ = unary_operators.top();
+            unary_operators.pop();
+            expr = tmp;
+          }
           i = match_parent;
         }
         //数据成员访问
         else {
-          DataMemberExpr* expr = new DataMemberExpr;
+          DataMemberExpr* dexpr = new DataMemberExpr;
           assert(tokens[i].token == TOKEN::ID);
-          expr->var_name_ = tokens[i].get<std::string>();
+          dexpr->var_name_ = tokens[i].get<std::string>();
           ++i;
           assert(tokens[i].token == TOKEN::DECIMAL_POINT);
           ++i;
           assert(tokens[i].token == TOKEN::ID);
-          expr->data_member_name_ = tokens[i].get<std::string>();
-          operands.push(expr);
+          dexpr->data_member_name_ = tokens[i].get<std::string>();
+          expr = dexpr;
+          if (unary_operators.empty() == false) {
+            UnaryExpr* tmp = new UnaryExpr;
+            tmp->child_ = expr;
+            tmp->operator_token_ = unary_operators.top();
+            unary_operators.pop();
+            expr = tmp;
+          }
         }
-        continue;
       }
       else {
         if (tokens[i].token == TOKEN::TRUE || tokens[i].token == TOKEN::FALSE) {
-          BoolIteralExpr* expr = new BoolIteralExpr;
-          expr->b_ = tokens[i].token == TOKEN::TRUE ? true : false;
-          operands.push(expr);
+          BoolIteralExpr* e = new BoolIteralExpr;
+          e->b_ = tokens[i].token == TOKEN::TRUE ? true : false;
+          expr = e;
         }
         else if (tokens[i].token == TOKEN::STRING_ITERAL) {
-          StringIteralExpr* expr = new StringIteralExpr;
-          expr->str_ = tokens[i].get<std::string>();
-          operands.push(expr);
+          StringIteralExpr* e = new StringIteralExpr;
+          e->str_ = tokens[i].get<std::string>();
+          expr = e;
         }
         else if (tokens[i].token == TOKEN::DOUBLE_ITERAL) {
-          DoubleIteralExpr* expr = new DoubleIteralExpr;
-          expr->d_ = tokens[i].get<double>();
-          operands.push(expr);
+          DoubleIteralExpr* e = new DoubleIteralExpr;
+          e->d_ = tokens[i].get<double>();
+          expr = e;
         }
         else if (tokens[i].token == TOKEN::INT_ITERAL) {
-          IntIteralExpr* expr = new IntIteralExpr;
-          expr->int_ = tokens[i].get<int64_t>();
-          operands.push(expr);
+          IntIteralExpr* e = new IntIteralExpr;
+          e->int_ = tokens[i].get<int64_t>();
+          expr = e;
         }
         else if (tokens[i].token == TOKEN::BYTE_ITERAL) {
-          ByteIteralExpr* expr = new ByteIteralExpr;
-          expr->c_ = tokens[i].get<uint8_t>();
-          operands.push(expr);
+          ByteIteralExpr* e = new ByteIteralExpr;
+          e->c_ = tokens[i].get<uint8_t>();
+          expr = e;
         }
         else {
           assert(tokens[i].token == TOKEN::ID);
           IdExpr* idexpr = new IdExpr;
           //通过id_name_, type_name_和scope_index_可以在O(1)时间内定位到变量。
           idexpr->id_name_ = tokens[i].get<std::string>();
-          operands.push(idexpr);
+          expr = idexpr;
         }
-        continue;
+        if (unary_operators.empty() == false) {
+          UnaryExpr* tmp = new UnaryExpr;
+          tmp->child_ = expr;
+          tmp->operator_token_ = unary_operators.top();
+          unary_operators.pop();
+          expr = tmp;
+        }
       }
       //非法的token
-      assert(false);
+      assert(expr != nullptr);
+      operands.push(expr);
     }
     else {
+      // 运算符在第一个位置或者前一个位置也是运算符，则是单元运算符
+      if (i == begin || OperatorSet::instance().Find(tokens[i - 1].token) == true) {
+        assert(OperatorSet::instance().FindUnary(current_token) == true);
+        unary_operators.push(current_token);
+        continue;
+      }
+      // 双元运算符不能看到单元运算符
+      assert(unary_operators.empty() == true);
       while (operators.empty() == false && CompareOperatorLevel(current_token, operators.top()) <= 0) {
         //运算, operands中至少有两个表达式
         BinaryExpr* binexpr = new BinaryExpr;
@@ -402,14 +464,13 @@ std::vector<std::pair<std::string, ComprehensiveType>> ParseParameterList(const 
     if (index == end) {
       break;
     }
-    assert(tokens[index].type == Token::TYPE::STRING);
-    assert(tokens[index + 1].token == TOKEN::ID && tokens[index + 1].type == Token::TYPE::STRING);
-    std::string type_name = tokens[index].get<std::string>();
-    std::string var_name = tokens[index + 1].get<std::string>();
-    ComprehensiveType tmp;
-    tmp.base_type_ = type_name;
-    result.push_back({ var_name, tmp });
-    index += 2;
+    size_t next = 0;
+    ComprehensiveType ct = ParseComprehensiveType(tokens, index, next);
+    index = next;
+    assert(tokens[index].token == TOKEN::ID && tokens[index].type == Token::TYPE::STRING);
+    std::string var_name = tokens[index].get<std::string>();
+    result.push_back({ var_name, ct });
+    ++index;
     assert(tokens[index].token == TOKEN::COMMA || tokens[index].token == TOKEN::RIGHT_PARENTHESIS);
     if (tokens[index].token == TOKEN::COMMA) {
       ++index;
@@ -509,12 +570,9 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
     if (begin == end) {
       break;
     }
-    assert(tokens[begin].type == Token::TYPE::STRING);
-    assert(TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
-    std::string type_name = tokens[begin].get<std::string>();
-    ++begin;
-    ComprehensiveType ct;
-    ct.base_type_ = type_name;
+    size_t next = 0;
+    ComprehensiveType ct = ParseComprehensiveType(tokens, begin, next);
+    begin = next;
     assert(tokens[begin].type == Token::TYPE::STRING);
     std::string var_name = tokens[begin].get<std::string>();
     result.RegisterData(var_name, ct);
@@ -532,11 +590,9 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 // 检查是否与变量数据成员的类型匹配。
 VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   VariableDefineStmt* result = new VariableDefineStmt;
-  assert(tokens[begin].type == Token::TYPE::STRING);
-  ComprehensiveType ct;
-  ct.base_type_ = tokens[begin].get<std::string>();
-  result->type_name_ = ct;
-  ++begin;
+  size_t next = 0;
+  result->type_name_ = ParseComprehensiveType(tokens, begin, next);
+  begin = next;
   assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
   result->var_name_ = tokens[begin].get<std::string>();
   ++begin;

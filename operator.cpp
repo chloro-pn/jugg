@@ -30,7 +30,7 @@ static Variable* plus_double_double(Variable* v1, Variable* v2) {
   return result;
 }
 
-static void register_builtin_plus_operators(Operator& plus) {
+static void register_builtin_plus_operators(BinaryOperator& plus) {
   plus.op_funcs_[{"string", "string"}] = plus_string_string;
   plus.op_funcs_[{"int", "int"}] = plus_int_int;
   plus.op_funcs_[{"double", "double"}] = plus_double_double;
@@ -56,7 +56,7 @@ static Variable* minus_double_double(Variable* v1, Variable* v2) {
   return result;
 }
 
-static void register_builtin_minus_operators(Operator& minus) {
+static void register_builtin_minus_operators(BinaryOperator& minus) {
   minus.op_funcs_[{"int", "int"}] = minus_int_int;
   minus.op_funcs_[{"double", "double"}] = minus_double_double;
 }
@@ -81,7 +81,7 @@ static Variable* multiply_double_double(Variable* v1, Variable* v2) {
   return result;
 }
 
-static void register_builtin_multiply_operators(Operator& op) {
+static void register_builtin_multiply_operators(BinaryOperator& op) {
   op.op_funcs_[{"int", "int"}] = multiply_int_int;
   op.op_funcs_[{"double", "double"}] = multiply_double_double;
 }
@@ -106,7 +106,7 @@ static Variable* divide_double_double(Variable* v1, Variable* v2) {
   return result;
 }
 
-static void register_builtin_divide_operators(Operator& op) {
+static void register_builtin_divide_operators(BinaryOperator& op) {
   op.op_funcs_[{"int", "int"}] = divide_int_int;
   op.op_funcs_[{"double", "double"}] = divide_double_double;
 }
@@ -121,7 +121,7 @@ static Variable* and_bool_bool(Variable* v1, Variable* v2) {
   return result;
 }
 
-static void register_builtin_and_operators(Operator& op) {
+static void register_builtin_and_operators(BinaryOperator& op) {
   op.op_funcs_[{"bool", "bool"}] = and_bool_bool;
 }
 
@@ -135,15 +135,11 @@ static Variable* or_bool_bool(Variable* v1, Variable* v2) {
   return result;
 }
 
-static void register_builtin_or_operators(Operator& op) {
+static void register_builtin_or_operators(BinaryOperator& op) {
   op.op_funcs_[{"bool", "bool"}] = or_bool_bool;
 }
 
-static void register_builtin_not_operators(Operator& op) {
-
-}
-
-static void register_builtin_assign_operators(Operator& op) {
+static void register_builtin_assign_operators(BinaryOperator& op) {
   auto assign_func = [](Variable* v1, Variable* v2)->Variable* {
     v1->Assign(v2);
     assert(v1->cate_ == Variable::Category::Lvalue);
@@ -242,7 +238,7 @@ static Variable* compare_bool_bool(Variable* v1, Variable* v2) {
   return result;
 }
 
-static void register_builtin_compare_operators(Operator& op) {
+static void register_builtin_compare_operators(BinaryOperator& op) {
   op.op_funcs_[{"int", "int"}] = compare_int_int;
   op.op_funcs_[{"string", "string"}] = compare_string_string;
   op.op_funcs_[{"double", "double"}] = compare_double_double;
@@ -270,7 +266,7 @@ static Variable* gt_double_double(Variable* v1, Variable* v2) {
   return result;
 }
 
-static void register_builtin_greater_than_operators(Operator& op) {
+static void register_builtin_greater_than_operators(BinaryOperator& op) {
   op.op_funcs_[{"int", "int"}] = gt_int_int;
   op.op_funcs_[{"double", "double"}] = gt_double_double;
 }
@@ -295,47 +291,44 @@ static Variable* lt_double_double(Variable* v1, Variable* v2) {
   return result;
 }
 
-static void register_builtin_less_than_operators(Operator& op) {
+static void register_builtin_less_than_operators(BinaryOperator& op) {
   op.op_funcs_[{"int", "int"}] = lt_int_int;
   op.op_funcs_[{"double", "double"}] = lt_double_double;
 }
 
-static void register_builtin_operators(std::unordered_map<TOKEN, Operator>& os) {
-  Operator plus(2, TOKEN::PLUS);
+static void register_builtin_operators(std::unordered_map<TOKEN, BinaryOperator>& os) {
+  BinaryOperator plus(2, TOKEN::PLUS);
   register_builtin_plus_operators(plus);
   os[TOKEN::PLUS] = plus;
 
-  Operator minus(2, TOKEN::MINUS);
+  BinaryOperator minus(2, TOKEN::MINUS);
   register_builtin_minus_operators(minus);
   os[TOKEN::MINUS] = minus;
 
-  Operator multiply(1, TOKEN::MULTIPLY);
+  BinaryOperator multiply(1, TOKEN::MULTIPLY);
   register_builtin_multiply_operators(multiply);
   os[TOKEN::MULTIPLY] = multiply;
 
-  Operator divide(1, TOKEN::DIVIDE);
+  BinaryOperator divide(1, TOKEN::DIVIDE);
   register_builtin_divide_operators(divide);
   os[TOKEN::DIVIDE] = divide;
   
-  Operator a(5, TOKEN::AND);
+  BinaryOperator a(5, TOKEN::AND);
   register_builtin_and_operators(a);
-  Operator o(6, TOKEN::OR);
+  BinaryOperator o(6, TOKEN::OR);
   register_builtin_or_operators(o);
-  Operator n(0, TOKEN::NOT);
-  register_builtin_not_operators(n);
   os[TOKEN::AND] = a;
   os[TOKEN::OR] = o;
-  os[TOKEN::NOT] = n;
 
-  Operator assign(7, TOKEN::ASSIGN);
+  BinaryOperator assign(7, TOKEN::ASSIGN);
   register_builtin_assign_operators(assign);
 
-  Operator compare(4, TOKEN::COMPARE);
+  BinaryOperator compare(4, TOKEN::COMPARE);
   register_builtin_compare_operators(compare);
 
-  Operator greater_than(3, TOKEN::GREATER_THAN);
+  BinaryOperator greater_than(3, TOKEN::GREATER_THAN);
   register_builtin_greater_than_operators(greater_than);
-  Operator less_than(3, TOKEN::LESS_THAN);
+  BinaryOperator less_than(3, TOKEN::LESS_THAN);
   register_builtin_less_than_operators(less_than);
   os[TOKEN::ASSIGN] = assign;
   os[TOKEN::COMPARE] = compare;
@@ -343,6 +336,31 @@ static void register_builtin_operators(std::unordered_map<TOKEN, Operator>& os) 
   os[TOKEN::LESS_THAN] = less_than;
 }
 
+void register_builtin_uoperators(std::unordered_map<TOKEN, UnaryOperator>& os) {
+  UnaryOperator n;
+  n.token_ = TOKEN::NOT;
+  n.func_ = [](Variable* v)->Variable* {
+    assert(v->type_name_.base_type_ == "bool");
+    BoolVariable* result = new BoolVariable;
+    result->cate_ = Variable::Category::Rvalue;
+    result->id_name_ = "tmp";
+    result->type_name_ = v->type_name_;
+    result->val_ = !(static_cast<BoolVariable*>(v)->val_);
+    return result;
+  };
+  os[TOKEN::NOT] = n;
+
+  UnaryOperator deref;
+  deref.token_ = TOKEN::MULTIPLY;
+  deref.func_ = [](Variable* v)->Variable* {
+    assert(v->type_name_.modifiers_.empty() == false);
+    assert(v->type_name_.modifiers_.back() == ComprehensiveType::Modifier::Pointer);
+    return static_cast<PointerVariable*>(v)->ptr_;
+  };
+  os[TOKEN::MULTIPLY] = deref;
+}
+
 OperatorSet::OperatorSet() {
-  register_builtin_operators(operators_);
+  register_builtin_operators(boperators_);
+  register_builtin_uoperators(uoperators_);
 }

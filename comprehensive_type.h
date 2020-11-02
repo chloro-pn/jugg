@@ -25,4 +25,8 @@ public:
     }
     return true;
   }
+
+  bool BaseType() const {
+    return modifiers_.empty() == true;
+  }
 };

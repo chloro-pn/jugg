@@ -338,6 +338,7 @@ void PointerVariable::ConstructByExpression(const std::vector<Expression*>& cs, 
   assert(cs.size() == 1);
   Variable* v = cs[0]->GetVariable();
   assert(v->cate_ == Variable::Category::Lvalue);
+  assert(v->type_name_ == type_name_);
   ptr_ = v;
 }
 

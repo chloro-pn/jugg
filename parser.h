@@ -15,6 +15,8 @@ size_t FindNextSemicolon(const std::vector<Token>& tokens, size_t begin);
 
 size_t FindNextComma(const std::vector<Token>& tokens, size_t begin);
 
+ComprehensiveType ParseComprehensiveType(const std::vector<Token>& tokens, size_t begin, size_t& end);
+
 //函数调用表达式的解析, begin是函数名字，end是右括号。
 FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, size_t end);
 

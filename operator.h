@@ -4,7 +4,7 @@
 #include "scanner.h"
 #include "variable.h"
 
-struct Operator {
+struct BinaryOperator {
   int level_;
   TOKEN token_;
   struct hash_for_maps {
@@ -13,17 +13,22 @@ struct Operator {
     }
   };
   std::unordered_map<std::pair<std::string, std::string>, std::function<Variable*(Variable*, Variable*)>, hash_for_maps> op_funcs_;
-  Operator(int l, TOKEN t) : level_(l), token_(t) {
+  BinaryOperator(int l, TOKEN t) : level_(l), token_(t) {
 
   }
 
-  Operator() : level_(-1), token_(TOKEN::INVALID) {
+  BinaryOperator() : level_(-1), token_(TOKEN::INVALID) {
 
   }
 
   bool FindOpFuncs(const std::string& t1, const std::string& t2) const {
     return op_funcs_.find({ t1, t2 }) != op_funcs_.end();
   }
+};
+
+struct UnaryOperator {
+  TOKEN token_;
+  std::function<Variable*(Variable*)> func_;
 };
 
 class OperatorSet {
@@ -33,21 +38,35 @@ class OperatorSet {
     return os;
   }
 
-  bool Find(const TOKEN& token) {
-    auto it = operators_.find(token);
-    return it != operators_.end();
+  bool FindBinary(const TOKEN& token) {
+    auto it = boperators_.find(token);
+    return it != boperators_.end();
   }
 
-  Operator& Get(const TOKEN& token) {
-    return operators_[token];
+  BinaryOperator& GetBinary(const TOKEN& token) {
+    return boperators_[token];
   }
 
   int GetLevel(TOKEN token) {
-    assert(Find(token) == true);
-    return operators_[token].level_;
+    assert(FindBinary(token) == true);
+    return boperators_[token].level_;
+  }
+
+  bool FindUnary(const TOKEN& token) {
+    auto it = uoperators_.find(token);
+    return it != uoperators_.end();
+  }
+
+  UnaryOperator& GetUnary(const TOKEN& token) {
+    return uoperators_[token];
+  }
+
+  bool Find(const TOKEN& token) {
+    return FindBinary(token) || FindUnary(token);
   }
 
  private:
   OperatorSet();
-  std::unordered_map<TOKEN, Operator> operators_;
+  std::unordered_map<TOKEN, BinaryOperator> boperators_;
+  std::unordered_map<TOKEN, UnaryOperator> uoperators_;
 };

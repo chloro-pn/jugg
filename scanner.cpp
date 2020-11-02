@@ -174,7 +174,7 @@ std::vector<Token> scan(std::string file) {
       begin = result[0].second;
     }
     else if (std::regex_search(begin, end, result, std::regex("!"), std::regex_constants::match_continuous)) {
-      tokens.push_back(CreateToken(TOKEN::IF));
+      tokens.push_back(CreateToken(TOKEN::NOT));
       begin = result[0].second;
     }
     else if (std::regex_search(begin, end, result, std::regex("=="), std::regex_constants::match_continuous)) {
