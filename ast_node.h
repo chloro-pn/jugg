@@ -98,9 +98,15 @@ class BinaryExpr : public Expression {
     Variable* v1 = left_->GetVariable();
     Variable* v2 = right_->GetVariable();
     //运算符可以处理这两个类型的变量,二元运算符只处理基本类型的变量，指针和数组特别处理。
-    assert(v1->type_name_.BaseType() == true && v2->type_name_.BaseType() == true);
-    assert(OperatorSet::instance().GetBinary(operator_token_).FindOpFuncs(v1->type_name_.base_type_, v2->type_name_.base_type_) == true);
-    Variable* result = OperatorSet::instance().GetBinary(operator_token_).op_funcs_[{v1->type_name_.base_type_, v2->type_name_.base_type_}](v1, v2);
+    Variable* result = nullptr;
+    if (v1->type_name_.BaseType() == true && v2->type_name_.BaseType() == true) {
+      assert(OperatorSet::instance().GetBinary(operator_token_).FindOpFuncs(v1->type_name_.base_type_, v2->type_name_.base_type_) == true);
+      result = OperatorSet::instance().GetBinary(operator_token_).op_funcs_[{v1->type_name_.base_type_, v2->type_name_.base_type_}](v1, v2);
+    }
+    else {
+      assert(v1->type_name_.PtrType() && v1->type_name_ == v2->type_name_);
+      result = OperatorSet::instance().HandlePtr(operator_token_, v1, v2);
+    }
     if (v1->cate_ == Variable::Category::Rvalue) {
       delete v1;
     }

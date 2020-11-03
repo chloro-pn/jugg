@@ -55,6 +55,7 @@ Interpreter::Interpreter() {
   global_context_->type_ = Context::Type::Global;
 
   inner_func_["print"] = inner_print;
+  inner_func_["len"] = inner_len;
 }
 
 Variable* Interpreter::FindVariableByName(const std::string& name) {

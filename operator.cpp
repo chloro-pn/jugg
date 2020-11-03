@@ -336,7 +336,7 @@ static void register_builtin_operators(std::unordered_map<TOKEN, BinaryOperator>
   os[TOKEN::LESS_THAN] = less_than;
 }
 
-void register_builtin_uoperators(std::unordered_map<TOKEN, UnaryOperator>& os) {
+static void register_builtin_uoperators(std::unordered_map<TOKEN, UnaryOperator>& os) {
   UnaryOperator n;
   n.token_ = TOKEN::NOT;
   n.func_ = [](Variable* v)->Variable* {
@@ -373,7 +373,22 @@ void register_builtin_uoperators(std::unordered_map<TOKEN, UnaryOperator>& os) {
   os[TOKEN::ADDRESS_OF] = addressof;
 }
 
+static void register_builtin_poperators(std::unordered_map<TOKEN, std::function<Variable*(Variable*, Variable*)>>& os) {
+  os[TOKEN::ASSIGN] = [](Variable* v1, Variable* v2)->Variable* {
+    v1->Assign(v2);
+    return v1;
+  };
+  os[TOKEN::COMPARE] = [](Variable* v1, Variable* v2)->Variable* {
+    BoolVariable* result = new BoolVariable;
+    result->type_name_.base_type_ = "bool";
+    result->val_ = static_cast<PointerVariable*>(v1)->ptr_ == static_cast<PointerVariable*>(v2)->ptr_;
+    result->cate_ = Variable::Category::Rvalue;
+    return result;
+  };
+}
+
 OperatorSet::OperatorSet() {
   register_builtin_operators(boperators_);
   register_builtin_uoperators(uoperators_);
+  register_builtin_poperators(pointer_operators_);
 }

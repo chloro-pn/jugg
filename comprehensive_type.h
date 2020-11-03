@@ -29,4 +29,8 @@ public:
   bool BaseType() const {
     return modifiers_.empty() == true;
   }
+
+  bool PtrType() const {
+    return !BaseType() && modifiers_.back() == Modifier::Pointer;
+  }
 };
