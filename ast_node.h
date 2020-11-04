@@ -8,32 +8,24 @@
 #include "interpreter.h"
 #include "comprehensive_type.h"
 
+// 类AstNode是抽象语法树节点的基类。
 class AstNode {
  public:
   virtual ~AstNode() = default;
 };
 
-// 每个表达式必将返回一个类型的值
+// 表达式类
 class Expression : public AstNode {
  public:
   virtual Variable* GetVariable() = 0;
 };
 
-/*
-// 目前不考虑数组类型的支持和实现
-class IndexExpr : public Expression {
- private:
-  size_t token_index_;
-  Expression* index_expr_;
-};
-*/
-
+// 函数调用表达式
 class FuncCallExpr : public Expression {
  public:
   std::string func_name_;
   std::vector<Expression*> parameters_;
   virtual Variable* GetVariable() override {
-    //解释器执行函数.
     std::vector<Variable*> vars;
     for (auto& each : parameters_) {
       Variable* v = each->GetVariable();
@@ -42,7 +34,6 @@ class FuncCallExpr : public Expression {
         vars.push_back(tmp);
       }
       else {
-        //注意，右值是没有名字的，因此在CallFunc中需要赋值给每个Rvale参数名字
         v->ChangeCategory(Variable::Category::Lvalue);
         vars.push_back(v);
       }
@@ -52,13 +43,15 @@ class FuncCallExpr : public Expression {
   }
 };
 
+// 方法调用表达式
 class MethodCallExpr : public Expression {
-public:
+ public:
   std::string var_name_;
   std::string method_name_;
   std::vector<Expression*> parameters_;
   virtual Variable* GetVariable() override {
     Variable* obj = Interpreter::instance().FindVariableByName(var_name_);
+    assert(obj != nullptr);
     std::vector<Variable*> vars;
     for (auto& each : parameters_) {
       Variable* v = each->GetVariable();
@@ -76,18 +69,21 @@ public:
   }
 };
 
+// 数据成员访问表达式
 class DataMemberExpr : public Expression {
-public:
+ public:
   std::string var_name_;
   std::string data_member_name_;
   virtual Variable* GetVariable() override {
     Variable* v = Interpreter::instance().FindVariableByName(var_name_);
+    assert(v != nullptr);
     Variable* v2 = v->FindMember(data_member_name_);
     assert(v2 != nullptr);
     return v2;
   }
 };
 
+// 二元运算符
 class BinaryExpr : public Expression {
  public:
   Expression* left_;
@@ -97,26 +93,24 @@ class BinaryExpr : public Expression {
   Variable* GetVariable() override {
     Variable* v1 = left_->GetVariable();
     Variable* v2 = right_->GetVariable();
-    //运算符可以处理这两个类型的变量,二元运算符只处理基本类型的变量，指针和数组特别处理。
+    assert(v1 != nullptr && v2 != nullptr);
     Variable* result = nullptr;
-    if (v1->type_name_.BaseType() == true && v2->type_name_.BaseType() == true) {
-      assert(OperatorSet::instance().GetBinary(operator_token_).FindOpFuncs(v1->type_name_.base_type_, v2->type_name_.base_type_) == true);
-      result = OperatorSet::instance().GetBinary(operator_token_).op_funcs_[{v1->type_name_.base_type_, v2->type_name_.base_type_}](v1, v2);
+    // 如果是基本类型
+    if (v1->type_name_.IsBaseType() == true && v2->type_name_.IsBaseType() == true) {
+      result = OperatorSet::instance().HandleBinary(operator_token_, v1, v2);
     }
     else {
+      // 否则是指针类型
       assert(v1->type_name_.PtrType() && v1->type_name_ == v2->type_name_);
       result = OperatorSet::instance().HandlePtr(operator_token_, v1, v2);
     }
-    if (v1->cate_ == Variable::Category::Rvalue) {
-      delete v1;
-    }
-    if (v2->cate_ == Variable::Category::Rvalue) {
-      delete v2;
-    }
+    Variable::HandleLife(v1);
+    Variable::HandleLife(v2);
     return result;
   }
 };
 
+// 单元运算符
 class UnaryExpr : public Expression {
  public:
   Expression* child_;
@@ -124,25 +118,24 @@ class UnaryExpr : public Expression {
 
   Variable* GetVariable() override {
     Variable* v = child_->GetVariable();
-    assert(OperatorSet::instance().FindUnary(operator_token_) == true);
-    Variable* result = OperatorSet::instance().GetUnary(operator_token_).func_(v);
-    if (v->cate_ == Variable::Category::Rvalue) {
-      delete v;
-    }
+    assert(v != nullptr);
+    Variable* result = OperatorSet::instance().HandleUnary(operator_token_, v);
+    Variable::HandleLife(v);
     return result;
   }
 };
 
+// id表达式
 class IdExpr : public Expression {
  public:
   std::string id_name_;
 
   Variable* GetVariable() override {
-    //解释器进行变量绑定并返回
     return Interpreter::instance().FindVariableByName(id_name_);
   }
 };
 
+// 字符串字面量表达式
 class StringIteralExpr : public Expression {
  public:
   std::string str_;
@@ -152,12 +145,14 @@ class StringIteralExpr : public Expression {
     v->type_name_.base_type_ = "string";
     v->val_ = str_;
     v->cate_ = Variable::Category::Rvalue;
+    v->id_name_ = "tmp";
     return v;
   }
 };
 
+// 整形表达式
 class IntIteralExpr : public Expression {
-public:
+ public:
   int64_t int_;
 
   Variable* GetVariable() override {
@@ -165,59 +160,72 @@ public:
     v->type_name_.base_type_ = "int";
     v->val_ = int_;
     v->cate_ = Variable::Category::Rvalue;
+    v->id_name_ = "tmp";
     return v;
   }
 };
 
+// 浮点型表达式
 class DoubleIteralExpr : public Expression {
-public:
+ public:
   double d_;
+
   virtual Variable* GetVariable() override {
     DoubleVariable* v = new DoubleVariable;
     v->type_name_.base_type_ = "double";
     v->val_ = d_;
     v->cate_ = Variable::Category::Rvalue;
+    v->id_name_ = "tmp";
     return v;
   }
 };
 
+// 布尔型表达式
 class BoolIteralExpr : public Expression {
-public:
+ public:
   bool b_;
+
   virtual Variable* GetVariable() override {
     BoolVariable* v = new BoolVariable;
     v->type_name_.base_type_ = "bool";
     v->val_ = b_;
     v->cate_ = Variable::Category::Rvalue;
+    v->id_name_ = "tmp";
     return v;
   }
 };
 
+// 字节型表达式
 class ByteIteralExpr : public Expression {
-public:
+ public:
   uint8_t c_;
+
   virtual Variable* GetVariable() override {
     ByteVariable* v = new ByteVariable;
     v->type_name_.base_type_ = "byte";
     v->val_ = c_;
     v->cate_ = Variable::Category::Rvalue;
+    v->id_name_ = "tmp";
     return v;
   }
 };
 
+// 语句, 每个语句都可以被执行(exec)，并具有返回值。
+// 这个返回值对语言使用者不可见，主要是为了实现break, return和continue等
+// 规则。
 class Statement : public AstNode {
 public:
   enum class State { Continue, Break, Next, Return };
   virtual State exec() = 0;
 };
 
+// 块语句
 class BlockStmt : public Statement {
  public:
   std::vector<Statement*> block_;
 
   State exec() override {
-    BlockContext* bc = new BlockContext;
-    bc->type_ = Context::Type::Block;
+    BlockContext* bc = new BlockContext(Context::Type::Block);
     Interpreter::instance().Enter(bc);
     for (auto& each : block_) {
       State s = each->exec();
@@ -231,6 +239,8 @@ class BlockStmt : public Statement {
   }
 };
 
+// 函数/方法语句，不使用块语句的原因是函数/方法上下文的进入由调用者控制，因此
+// exec中不进行上下文的记录。
 class FMBlockStmt : public BlockStmt {
  public:
   State exec() override {
@@ -244,6 +254,7 @@ class FMBlockStmt : public BlockStmt {
   }
 };
 
+// for语句
 class ForStmt : public Statement {
  public:
   Expression* init_;
@@ -252,36 +263,30 @@ class ForStmt : public Statement {
   BlockStmt* block_;
 
   State exec() override {
-    init_->GetVariable();
+    Variable* v = init_->GetVariable();
     while (true) {
       Variable* v = check_->GetVariable();
-      assert(v->type_name_.base_type_ == "bool");
-      bool check = static_cast<BoolVariable*>(v)->val_;
-      if (v->cate_ == Variable::Category::Rvalue) {
-        delete v;
-      }
-      if (check == true) {
+      assert(v->type_name_.IsBaseType("bool") == true);
+      bool check = VariableCast<BoolVariable>(v)->val_;
+      Variable::HandleLife(v);
+      if (check == false) {
         break;
       }
       State s = block_->exec();
-      if (s == State::Continue) {
-        continue;
-      }
-      else if (s == State::Break) {
+      if (s == State::Break) {
         break;
       }
       else if (s == State::Return) {
         return s;
       }
       v = update_->GetVariable();
-      if (v->cate_ == Variable::Category::Rvalue) {
-        delete v;
-      }
+      Variable::HandleLife(v);
     }
     return State::Next;
   }
 };
 
+// if语句
 class IfStmt : public Statement {
  public:
   Expression* check_;
@@ -290,11 +295,9 @@ class IfStmt : public Statement {
 
   State exec() override {
     Variable* v = check_->GetVariable();
-    assert(v->type_name_.base_type_ == "bool");
-    bool check = static_cast<BoolVariable*>(v)->val_;
-    if (v->cate_ == Variable::Category::Rvalue) {
-      delete v;
-    }
+    assert(v->type_name_.IsBaseType("bool"));
+    bool check = VariableCast<BoolVariable>(v)->val_;
+    Variable::HandleLife(v);
     if (check == true) {
       State s = if_block_->exec();
       if (s != State::Next) {
@@ -311,6 +314,7 @@ class IfStmt : public Statement {
   }
 };
 
+// while语句
 class WhileStmt : public Statement {
  public:
   Expression* check_;
@@ -319,11 +323,9 @@ class WhileStmt : public Statement {
   State exec() override {
     while (true) {
       Variable* v = check_->GetVariable();
-      assert(v->type_name_.base_type_ == "bool");
-      bool check = static_cast<BoolVariable*>(v)->val_;
-      if (v->cate_ == Variable::Category::Rvalue) {
-        delete v;
-      }
+      assert(v->type_name_.IsBaseType("bool"));
+      bool check = VariableCast<BoolVariable>(v)->val_;
+      Variable::HandleLife(v);
       if (check == false) {
         break;
       }
@@ -356,7 +358,6 @@ public:
   }
 };
 
-//如果return_var_ == nullptr，则为空语句。
 class ReturnStmt : public Statement {
  public:
   Expression* return_exp_;
@@ -364,37 +365,41 @@ class ReturnStmt : public Statement {
   State exec() override {
     Variable** return_var_ = Interpreter::instance().GetCurrentContext()->GetReturnVar();
     assert(return_var_ != nullptr);
+    //如果return_var_是空指针，则return语句是空语句。
     if (return_exp_ != nullptr) {
       Variable* tmp = return_exp_->GetVariable();
-      if (tmp->cate_ == Variable::Category::Lvalue) {
+      assert(tmp != nullptr);
+      if (tmp->IsLValue()) {
         *return_var_ = tmp->Copy(Variable::Category::Rvalue);
       }
       else {
-        //返回的就是右值，故不需要copy，直接使用即可。
         *return_var_ = tmp;
       }
     }
     else {
       *return_var_ = new VoidVariable;
       (*return_var_)->type_name_.base_type_ = "void";
+      (*return_var_)->id_name_ = "tmp";
+      (*return_var_)->cate_ = Variable::Category::Rvalue;
     }
     return State::Return;
   }
 };
 
+// 表达式语句
 class ExpressionStmt : public Statement {
  public:
   Expression* root_;
 
   State exec() override {
     Variable* v = root_->GetVariable();
-    if (v->cate_ == Variable::Category::Rvalue) {
-      delete v;
-    }
+    assert(v != nullptr);
+    Variable::HandleLife(v);
     return State::Next;
   }
 };
 
+// 变量定义语句
 class VariableDefineStmt : public Statement {
  public:
   ComprehensiveType type_name_;
@@ -408,9 +413,7 @@ class VariableDefineStmt : public Statement {
     v->id_name_ = var_name_;
     //显式定义的变量都是左值。
     v->ConstructByExpression(constructors_, Variable::Category::Lvalue);
-    auto& vars = Interpreter::instance().GetCurrentContext()->vars_;
-    assert(vars.find(var_name_) == vars.end());
-    vars[var_name_] = v;
+    Interpreter::instance().GetCurrentContext()->RegisterVariable(v);
     return State::Next;
   }
 };

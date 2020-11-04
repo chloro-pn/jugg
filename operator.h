@@ -38,13 +38,9 @@ class OperatorSet {
     return os;
   }
 
-  bool FindBinary(const TOKEN& token) {
-    auto it = boperators_.find(token);
-    return it != boperators_.end();
-  }
-
-  BinaryOperator& GetBinary(const TOKEN& token) {
-    return boperators_[token];
+  Variable* HandleBinary(TOKEN token, Variable* v1, Variable* v2) {
+    assert(FindBinary(token) == true);
+    return boperators_[token].op_funcs_[{v1->type_name_.base_type_, v2->type_name_.base_type_}](v1, v2);
   }
 
   int GetLevel(TOKEN token) {
@@ -52,18 +48,9 @@ class OperatorSet {
     return boperators_[token].level_;
   }
 
-  bool FindUnary(const TOKEN& token) {
-    auto it = uoperators_.find(token);
-    return it != uoperators_.end();
-  }
-
-  UnaryOperator& GetUnary(const TOKEN& token) {
-    return uoperators_[token];
-  }
-
-  bool FindPtr(const TOKEN& token) {
-    auto it = pointer_operators_.find(token);
-    return it != pointer_operators_.end();
+  Variable* HandleUnary(TOKEN token, Variable* v) {
+    assert(FindUnary(token) == true);
+    return uoperators_[token].func_(v);
   }
 
   Variable* HandlePtr(const TOKEN& token, Variable* v1, Variable* v2) {
@@ -72,6 +59,21 @@ class OperatorSet {
 
   bool Find(const TOKEN& token) {
     return FindBinary(token) || FindUnary(token) || FindPtr(token);
+  }
+
+  bool FindBinary(const TOKEN& token) {
+    auto it = boperators_.find(token);
+    return it != boperators_.end();
+  }
+
+  bool FindUnary(const TOKEN& token) {
+    auto it = uoperators_.find(token);
+    return it != uoperators_.end();
+  }
+
+  bool FindPtr(const TOKEN& token) {
+    auto it = pointer_operators_.find(token);
+    return it != pointer_operators_.end();
   }
 
  private:

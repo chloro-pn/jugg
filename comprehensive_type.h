@@ -26,11 +26,15 @@ public:
     return true;
   }
 
-  bool BaseType() const {
+  bool IsBaseType() const {
     return modifiers_.empty() == true;
   }
 
+  bool IsBaseType(const std::string& type_name) const {
+    return modifiers_.empty() == true && base_type_ == type_name;
+  }
+
   bool PtrType() const {
-    return !BaseType() && modifiers_.back() == Modifier::Pointer;
+    return !IsBaseType() && modifiers_.back() == Modifier::Pointer;
   }
 };

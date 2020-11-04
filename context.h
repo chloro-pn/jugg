@@ -9,6 +9,11 @@ public:
   Type type_;
   std::unordered_map<std::string, Variable*> vars_;
 
+  explicit Context(Type type) : type_(type) {}
+  void RegisterVariable(Variable* v) {
+    assert(vars_.find(v->id_name_) == vars_.end());
+    vars_[v->id_name_] = v;
+  }
   virtual Variable* GetVariableByName(const std::string& name) = 0;
   virtual Variable** GetReturnVar() = 0;
 };
@@ -17,6 +22,8 @@ class FuncContext : public Context {
 public:
   std::string func_name_;
   Variable* return_var_;
+
+  FuncContext() : Context(Type::Func) {}
 
   Variable* GetVariableByName(const std::string& name) override {
     if (vars_.find(name) != vars_.end()) {
@@ -36,6 +43,8 @@ public:
   std::string method_name_;
   Variable* return_var_;
 
+  MethodContext() : Context(Type::Method) {}
+
   Variable* GetVariableByName(const std::string& name) override {
     if (vars_.find(name) != vars_.end()) {
       return vars_[name];
@@ -51,6 +60,8 @@ public:
 
 class BlockContext : public Context {
 public:
+  explicit BlockContext(Type type) : Context(type) {}
+
   Variable* GetVariableByName(const std::string& name) override {
     if (vars_.find(name) != vars_.end()) {
       return vars_[name];

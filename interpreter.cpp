@@ -51,9 +51,7 @@ static void inner_len(inner_func_context* fc) {
 
 //初始情况下在全局作用域。
 Interpreter::Interpreter() {
-  global_context_ = new BlockContext;
-  global_context_->type_ = Context::Type::Global;
-
+  global_context_ = new BlockContext(Context::Type::Global);
   inner_func_["print"] = inner_print;
   inner_func_["len"] = inner_len;
 }

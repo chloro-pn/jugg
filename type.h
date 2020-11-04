@@ -29,6 +29,16 @@ class Type {
 
   }
 
+  const ComprehensiveType& GetNthDataMemberType(size_t n) {
+    assert(n < datas_.size());
+    return datas_[n].second;
+  }
+
+  const std::string& GetNthDataMemberName(size_t n) {
+    assert(n < datas_.size());
+    return datas_[n].first;
+  }
+
   bool FindMethod(const std::string& name) const {
     return methods_.find(name) != methods_.end();
   }
