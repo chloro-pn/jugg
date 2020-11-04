@@ -20,6 +20,7 @@ class Interpreter {
 public:
   static Interpreter& instance();
   Variable* FindVariableByName(const std::string&);
+  Variable** GetReturnVar();
   void Enter(BlockContext* c) {
     context_.push(c);
   }

@@ -85,6 +85,18 @@ Variable* Interpreter::FindVariableByName(const std::string& name) {
   return global_context_->GetVariableByName(name);
 }
 
+Variable** Interpreter::GetReturnVar() {
+  std::stack<Context*> c = context_;
+  while (c.empty() == false) {
+    Context* cur = c.top();
+    c.pop();
+    if (cur->type_ == Context::Type::Func || cur->type_ == Context::Type::Method) {
+      return cur->GetReturnVar();
+    }
+  }
+  return nullptr;
+}
+
 void Interpreter::Exec() {
   //全局变量的构造
   for (auto& each : global_var_) {

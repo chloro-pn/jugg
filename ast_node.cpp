@@ -218,7 +218,7 @@ Statement::State WhileStmt::exec() {
 }
 
 Statement::State ReturnStmt::exec() {
-  Variable** return_var_ = Interpreter::instance().GetCurrentContext()->GetReturnVar();
+  Variable** return_var_ = Interpreter::instance().GetReturnVar();
   assert(return_var_ != nullptr);
   //如果return_var_是空指针，则return语句是空语句。
   if (return_exp_ != nullptr) {
