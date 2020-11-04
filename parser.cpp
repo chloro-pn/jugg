@@ -46,10 +46,23 @@ FindNext(FindNextSemicolon, TOKEN::SEMICOLON);
 
 FindNext(FindNextComma, TOKEN::COMMA);
 
+// bug修复，也许表达式中也会有COMMA符号存在，应该跳过
 size_t FindNextCommaOrEnd(const std::vector<Token>& tokens, size_t begin, size_t end) {
   size_t index = begin;
+  size_t count = 1;
   while (index < tokens.size()) {
-    if (tokens[index].token == TOKEN::COMMA || index == end) {
+    if (tokens[index].token == TOKEN::LEFT_PARENTHESIS) {
+      ++count;
+    }
+    else if (tokens[index].token == TOKEN::RIGHT_PARENTHESIS) {
+      assert(count > 0);
+      --count;
+      if (count == 0) {
+        assert(index == end);
+        return index;
+      }
+    }
+    else if (tokens[index].token == TOKEN::COMMA && count == 1) {
       return index;
     }
     ++index;
@@ -166,7 +179,7 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
     if (current_token == TOKEN::LEFT_PARENTHESIS) {
       size_t match_parent = FindMatchedParenthesis(tokens, i);
       // 递归求解括号中的表达式
-      operands.push(ParseExpression(tokens, i, match_parent));
+      operands.push(ParseExpression(tokens, i + 1, match_parent));
       i = match_parent;
       continue;
     }
@@ -504,6 +517,8 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   //函数返回值的类型在类型系统中可以找到。
   assert(tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
   result.return_type_.base_type_ = tokens[begin].get<std::string>();
+  //just for test.首先将符号引入符号表，便于后续查找。
+  FuncSet::instance().RegisterFunc(result);
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
