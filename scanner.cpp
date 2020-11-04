@@ -222,8 +222,8 @@ std::vector<Token> scan(std::string file) {
       begin = result[0].second;
     }
     else if (std::regex_search(begin, end, result, std::regex("[a-zA-Z_][a-zA-Z0-9_]*"), std::regex_constants::match_continuous)) {
-      if (KeyWords::instance().find(result[0]) == true) {
-        tokens.push_back(CreateToken(KeyWords::instance().get(result[0].str()), result[0].str()));
+      if (KeyWords::instance().Find(result[0]) == true) {
+        tokens.push_back(CreateToken(KeyWords::instance().Get(result[0].str()), result[0].str()));
       }
       else {
         tokens.push_back(CreateToken(TOKEN::ID, result[0].str()));

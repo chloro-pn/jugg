@@ -5,6 +5,7 @@
 #include <cassert>
 #include "comprehensive_type.h"
 #include "variable.h"
+#include "ast_node.h"
 
 class BlockStmt;
 class Func {
@@ -35,6 +36,11 @@ class FuncSet {
   void RegisterFunc(const Func& func) {
     assert(Find(func.func_name_) == false);
     Set(func.func_name_, func);
+  }
+
+  Statement::State CallFunc(const std::string& func_name) {
+    assert(Find(func_name) == true);
+    return Get(func_name).block_->exec();
   }
 
  private:

@@ -14,22 +14,25 @@ Interpreter& Interpreter::instance() {
 
 static void inner_print(inner_func_context* fc) {
   fc->return_var_ = new VoidVariable;
-  fc->return_var_->id_name_ = "void";
+  fc->return_var_->id_name_ = "tmp";
+  fc->return_var_->type_name_.base_type_ = "void";
+  fc->return_var_->cate_ = Variable::Category::Rvalue;
   for (auto& each : fc->vars_) {
+    assert(each->type_name_.IsBaseType());
     if (each->type_name_.base_type_ == "int") {
-      std::cout << static_cast<IntVariable*>(each)->val_;
+      std::cout << VariableCast<IntVariable>(each)->val_;
     }
     else if (each->type_name_.base_type_ == "string") {
-      std::cout << static_cast<StringVariable*>(each)->val_;
+      std::cout << VariableCast<StringVariable>(each)->val_;
     }
     else if (each->type_name_.base_type_ == "double") {
-      std::cout << static_cast<DoubleVariable*>(each)->val_;
+      std::cout << VariableCast<DoubleVariable>(each)->val_;
     }
     else if (each->type_name_.base_type_ == "bool") {
-      std::cout << static_cast<BoolVariable*>(each)->val_;
+      std::cout << VariableCast<BoolVariable>(each)->val_;
     }
     else if (each->type_name_.base_type_ == "byte") {
-      std::cout << static_cast<ByteVariable*>(each)->val_;
+      std::cout << VariableCast<ByteVariable>(each)->val_;
     }
     else {
       assert(false);
@@ -39,8 +42,8 @@ static void inner_print(inner_func_context* fc) {
 }
 
 static void inner_len(inner_func_context* fc) {
-  assert(fc->vars_.size() == 1 && fc->vars_[0]->type_name_.base_type_ == "string");
-  size_t i = static_cast<StringVariable*>(fc->vars_[0])->val_.size();
+  assert(fc->vars_.size() == 1 && fc->vars_[0]->type_name_.IsBaseType("string"));
+  size_t i = VariableCast<StringVariable>(fc->vars_[0])->val_.size();
   IntVariable* v = new IntVariable;
   v->cate_ = Variable::Category::Rvalue;
   v->id_name_ = "tmp";
@@ -89,11 +92,11 @@ void Interpreter::Exec() {
     v->id_name_ = each->var_name_;
     v->type_name_ = each->type_name_;
     v->ConstructByExpression(each->constructors_, Variable::Category::Lvalue);
-    global_context_->vars_[v->id_name_] = v;
+    global_context_->RegisterVariable(v);
   }
   Variable* v = CallFunc("main", {});
   assert(v->type_name_.base_type_ == "void");
-  delete v;
+  Variable::HandleLife(v);
   assert(context_.size() == 0);
   //全局变量的析构
   global_context_->Clean();
@@ -115,44 +118,24 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
     delete ifc;
     return result;
   }
-  assert(FuncSet::instance().Find(func_name) == true);
-  Func& func = FuncSet::instance().Get(func_name);
-  FuncContext* fc = new FuncContext;
-  fc->func_name_ = func_name;
-  //main函数没有参数传入
-  assert(func.parameter_type_list_.size() == variables.size());
-  for (int i = 0; i < variables.size(); ++i) {
-    assert(func.parameter_type_list_[i].second == variables[i]->type_name_);
-    //注意应该使用函数参数的名字。
-    variables[i]->id_name_ = func.parameter_type_list_[i].first;
-    fc->vars_[func.parameter_type_list_[i].first] = variables[i];
-  }
 
+  FuncContext* fc = new FuncContext(func_name);
+  fc->InitVars(variables);
   context_.push(fc);
-  Statement::State s = func.block_->exec();
+  Statement::State s = FuncSet::instance().CallFunc(func_name);
   assert(s == Statement::State::Return);
   fc->Clean();
   Variable* result = fc->return_var_;
   context_.pop();
   delete fc;
-  //函数返回值是一个右值。
   return result;
 }
 
 Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name, const std::vector<Variable*>& variables) {
   Type& type = TypeSet::instance().Get(obj->type_name_.base_type_);
-  assert(type.methods_.find(method_name) != type.methods_.end());
-  Method& method = type.methods_[method_name];
-  MethodContext* mc = new MethodContext;
-  mc->method_name_ = method_name;
-  mc->obj_ = obj;
-  assert(method.parameter_type_list_.size() == variables.size());
-  for (int i = 0; i < variables.size(); ++i) {
-    assert(method.parameter_type_list_[i].second == variables[i]->type_name_);
-    //注意应该使用函数参数的名字。
-    variables[i]->id_name_ = method.parameter_type_list_[i].first;
-    mc->vars_[method.parameter_type_list_[i].first] = variables[i];
-  }
+  Method& method = type.GetMethod(method_name);
+  MethodContext* mc = new MethodContext(obj, method_name);
+  mc->InitVars(variables);
   context_.push(mc);
   Statement::State s = method.block_->exec();
   assert(s == Statement::State::Return);
@@ -160,7 +143,6 @@ Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name,
   Variable* result = mc->return_var_;
   context_.pop();
   delete mc;
-  //函数返回值是一个右值。
   return result;
 }
 

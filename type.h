@@ -39,6 +39,11 @@ class Type {
     return datas_[n].first;
   }
 
+  Method& GetMethod(const std::string & method_name) {
+    assert(FindMethod(method_name));
+    return methods_[method_name];
+  }
+
   bool FindMethod(const std::string& name) const {
     return methods_.find(name) != methods_.end();
   }

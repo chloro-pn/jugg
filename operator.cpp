@@ -5,6 +5,7 @@ static Variable* plus_int_int(Variable* v1, Variable* v2) {
   int64_t v = static_cast<IntVariable*>(v1)->val_ + static_cast<IntVariable*>(v2)->val_;
   IntVariable* result = new IntVariable;
   result->type_name_.base_type_ = "int";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -15,6 +16,7 @@ static Variable* plus_string_string(Variable* v1, Variable* v2) {
   std::string v = static_cast<StringVariable*>(v1)->val_ + static_cast<StringVariable*>(v2)->val_;
   StringVariable* result = new StringVariable;
   result->type_name_.base_type_ = "string";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -25,6 +27,7 @@ static Variable* plus_double_double(Variable* v1, Variable* v2) {
   double v = static_cast<DoubleVariable*>(v1)->val_ + static_cast<DoubleVariable*>(v2)->val_;
   DoubleVariable* result = new DoubleVariable;
   result->type_name_.base_type_ = "double";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -41,6 +44,7 @@ static Variable* minus_int_int(Variable* v1, Variable* v2) {
   int64_t v = static_cast<IntVariable*>(v1)->val_ - static_cast<IntVariable*>(v2)->val_;
   IntVariable* result = new IntVariable;
   result->type_name_.base_type_ = "int";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -51,6 +55,7 @@ static Variable* minus_double_double(Variable* v1, Variable* v2) {
   double v = static_cast<DoubleVariable*>(v1)->val_ - static_cast<DoubleVariable*>(v2)->val_;
   DoubleVariable* result = new DoubleVariable;
   result->type_name_.base_type_ = "double";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -66,6 +71,7 @@ static Variable* multiply_int_int(Variable* v1, Variable* v2) {
   int64_t v = static_cast<IntVariable*>(v1)->val_ * static_cast<IntVariable*>(v2)->val_;
   IntVariable* result = new IntVariable;
   result->type_name_.base_type_ = "int";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -76,6 +82,7 @@ static Variable* multiply_double_double(Variable* v1, Variable* v2) {
   double v = static_cast<DoubleVariable*>(v1)->val_ * static_cast<DoubleVariable*>(v2)->val_;
   DoubleVariable* result = new DoubleVariable;
   result->type_name_.base_type_ = "double";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -91,6 +98,7 @@ static Variable* divide_int_int(Variable* v1, Variable* v2) {
   int64_t v = static_cast<IntVariable*>(v1)->val_ / static_cast<IntVariable*>(v2)->val_;
   IntVariable* result = new IntVariable;
   result->type_name_.base_type_ = "int";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -101,6 +109,7 @@ static Variable* divide_double_double(Variable* v1, Variable* v2) {
   double v = static_cast<DoubleVariable*>(v1)->val_ / static_cast<DoubleVariable*>(v2)->val_;
   DoubleVariable* result = new DoubleVariable;
   result->type_name_.base_type_ = "double";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -116,6 +125,7 @@ static Variable* and_bool_bool(Variable* v1, Variable* v2) {
   bool b = static_cast<BoolVariable*>(v1)->val_ && static_cast<BoolVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->type_name_.base_type_= "bool";
+  result->id_name_ = "tmp";
   result->val_ = b;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -130,6 +140,7 @@ static Variable* or_bool_bool(Variable* v1, Variable* v2) {
   bool b = static_cast<BoolVariable*>(v1)->val_ || static_cast<BoolVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->type_name_.base_type_ = "bool";
+  result->id_name_ = "tmp";
   result->val_ = b;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -251,6 +262,7 @@ static Variable* gt_int_int(Variable* v1, Variable* v2) {
   bool v = static_cast<IntVariable*>(v1)->val_ > static_cast<IntVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->type_name_.base_type_ = "bool";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -261,6 +273,7 @@ static Variable* gt_double_double(Variable* v1, Variable* v2) {
   bool v = static_cast<DoubleVariable*>(v1)->val_ > static_cast<DoubleVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->type_name_.base_type_ = "bool";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -276,6 +289,7 @@ static Variable* lt_int_int(Variable* v1, Variable* v2) {
   bool v = static_cast<IntVariable*>(v1)->val_ < static_cast<IntVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->type_name_.base_type_ = "bool";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -286,6 +300,7 @@ static Variable* lt_double_double(Variable* v1, Variable* v2) {
   bool v = static_cast<DoubleVariable*>(v1)->val_ < static_cast<DoubleVariable*>(v2)->val_;
   BoolVariable* result = new BoolVariable;
   result->type_name_.base_type_ = "bool";
+  result->id_name_ = "tmp";
   result->val_ = v;
   result->cate_ = Variable::Category::Rvalue;
   return result;
@@ -381,6 +396,7 @@ static void register_builtin_poperators(std::unordered_map<TOKEN, std::function<
   os[TOKEN::COMPARE] = [](Variable* v1, Variable* v2)->Variable* {
     BoolVariable* result = new BoolVariable;
     result->type_name_.base_type_ = "bool";
+    result->id_name_ = "tmp";
     result->val_ = static_cast<PointerVariable*>(v1)->ptr_ == static_cast<PointerVariable*>(v2)->ptr_;
     result->cate_ = Variable::Category::Rvalue;
     return result;
