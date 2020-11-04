@@ -101,7 +101,7 @@ class BinaryExpr : public Expression {
     }
     else {
       // 否则是指针类型
-      assert(v1->type_name_.PtrType() && v1->type_name_ == v2->type_name_);
+      assert(v1->type_name_.IsPtrType() && v1->type_name_ == v2->type_name_);
       result = OperatorSet::instance().HandlePtr(operator_token_, v1, v2);
     }
     Variable::HandleLife(v1);

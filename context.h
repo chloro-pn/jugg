@@ -14,6 +14,11 @@ public:
     assert(vars_.find(v->id_name_) == vars_.end());
     vars_[v->id_name_] = v;
   }
+  void Clean() {
+    for (auto& each : vars_) {
+      delete each.second;
+    }
+  }
   virtual Variable* GetVariableByName(const std::string& name) = 0;
   virtual Variable** GetReturnVar() = 0;
 };

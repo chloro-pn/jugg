@@ -1,7 +1,7 @@
 #pragma once
 #include <unordered_map>
 #include <functional>
-#include "scanner.h"
+#include "token.h"
 #include "variable.h"
 
 struct BinaryOperator {
@@ -19,6 +19,11 @@ struct BinaryOperator {
 
   BinaryOperator() : level_(-1), token_(TOKEN::INVALID) {
 
+  }
+
+  Variable* Handle(Variable* v1, Variable* v2) {
+    assert(FindOpFuncs(v1->type_name_.base_type_, v2->type_name_.base_type_));
+    return op_funcs_[{v1->type_name_.base_type_, v2->type_name_.base_type_}](v1, v2);
   }
 
   bool FindOpFuncs(const std::string& t1, const std::string& t2) const {
@@ -40,7 +45,7 @@ class OperatorSet {
 
   Variable* HandleBinary(TOKEN token, Variable* v1, Variable* v2) {
     assert(FindBinary(token) == true);
-    return boperators_[token].op_funcs_[{v1->type_name_.base_type_, v2->type_name_.base_type_}](v1, v2);
+    return boperators_[token].Handle(v1, v2);
   }
 
   int GetLevel(TOKEN token) {

@@ -96,9 +96,7 @@ void Interpreter::Exec() {
   delete v;
   assert(context_.size() == 0);
   //全局变量的析构
-  for (auto& each : GetCurrentContext()->vars_) {
-    delete each.second;
-  }
+  global_context_->Clean();
   delete global_context_;
 }
 
@@ -121,7 +119,6 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   Func& func = FuncSet::instance().Get(func_name);
   FuncContext* fc = new FuncContext;
   fc->func_name_ = func_name;
-  fc->type_ = Context::Type::Func;
   //main函数没有参数传入
   assert(func.parameter_type_list_.size() == variables.size());
   for (int i = 0; i < variables.size(); ++i) {
@@ -134,9 +131,7 @@ Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<
   context_.push(fc);
   Statement::State s = func.block_->exec();
   assert(s == Statement::State::Return);
-  for (auto& each : fc->vars_) {
-    delete each.second;
-  }
+  fc->Clean();
   Variable* result = fc->return_var_;
   context_.pop();
   delete fc;
@@ -150,7 +145,6 @@ Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name,
   Method& method = type.methods_[method_name];
   MethodContext* mc = new MethodContext;
   mc->method_name_ = method_name;
-  mc->type_ = Context::Type::Method;
   mc->obj_ = obj;
   assert(method.parameter_type_list_.size() == variables.size());
   for (int i = 0; i < variables.size(); ++i) {
@@ -162,9 +156,7 @@ Variable* Interpreter::CallMethod(Variable* obj, const std::string& method_name,
   context_.push(mc);
   Statement::State s = method.block_->exec();
   assert(s == Statement::State::Return);
-  for (auto& each : mc->vars_) {
-    delete each.second;
-  }
+  mc->Clean();
   Variable* result = mc->return_var_;
   context_.pop();
   delete mc;

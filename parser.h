@@ -1,5 +1,6 @@
 #pragma once
 #include "ast_node.h"
+#include "scanner.h"
 #include "func.h"
 #include "type.h"
 #include "comprehensive_type.h"

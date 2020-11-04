@@ -34,7 +34,7 @@ public:
     return modifiers_.empty() == true && base_type_ == type_name;
   }
 
-  bool PtrType() const {
+  bool IsPtrType() const {
     return !IsBaseType() && modifiers_.back() == Modifier::Pointer;
   }
 };
