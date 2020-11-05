@@ -1,0 +1,10 @@
+int a(1);
+
+func main() void {
+  if(true) {
+    int a(2);
+    print(a);
+  }
+  print(a);
+  return;
+}

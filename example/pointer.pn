@@ -1,0 +1,13 @@
+// 目前只支持指针的初始化，解引用，赋值操作
+
+func main() void {
+  int a(4);
+  int* ptr(&a);
+  int* p2;
+  p2 = &a;
+  *ptr = 3;
+  print(a);
+  *p2 = 2;
+  print(a);
+  return;
+}

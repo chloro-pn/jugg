@@ -1,0 +1,15 @@
+type Person {
+  int age;
+  string name;
+}
+
+method(Person) GetName() string {
+  return name;
+}
+
+func main() void {
+  Person boy(25, "nanpang");
+  print(boy.age);
+  print(boy.GetName());
+  return;
+}

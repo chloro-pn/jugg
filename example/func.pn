@@ -1,0 +1,10 @@
+// 支持原始函数，格式如下
+
+func add(int x, int y) int {
+  return x + y;
+}
+
+func main() void {
+  print(add(2, 3));
+  return;
+}

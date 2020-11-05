@@ -1,0 +1,16 @@
+func Fibonacci(int n) int {
+  if(n == 0) {
+    return 0;
+  }
+  else {
+    if(n == 1) {
+      return 1;
+    }
+  }
+  return Fibonacci(n - 1) + Fibonacci(n - 2);
+}
+
+func main() void {
+  print("fibonacci 6th(from 0) num is ", Fibonacci(6));
+  return;
+}
