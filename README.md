@@ -31,3 +31,10 @@ func main() void {
   return;
 }
 ```
+
+## try
+```
+cd src
+make 
+./jugg ../example/xxx.pn
+```
