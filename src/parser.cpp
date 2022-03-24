@@ -45,6 +45,29 @@ FindNext(FindNextSemicolon, TOKEN::SEMICOLON);
 
 FindNext(FindNextComma, TOKEN::COMMA);
 
+std::string get_identifier(const std::vector<Token>& tokens, size_t& begin) {
+  assert(begin < tokens.size());
+  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
+  std::string result = tokens[begin].get<std::string>();
+  begin += 1;
+  return result;
+}
+
+std::string get_type_name(const std::vector<Token>& tokens, size_t& begin) {
+  assert(begin < tokens.size());
+  assert(tokens[begin].type == Token::TYPE::STRING);
+  std::string result = tokens[begin].get<std::string>();
+  begin += 1;
+  return result;
+}
+
+void check_token(const std::vector<Token>& tokens, size_t& begin, TOKEN should_be) {
+  assert(begin < tokens.size());
+  assert(tokens[begin].token == should_be);
+  begin += 1;
+  return;
+}
+
 size_t FindNextCommaOrEnd(const std::vector<Token>& tokens, size_t begin, size_t end) {
   size_t index = begin;
   size_t count = 1;
@@ -105,12 +128,8 @@ static int CompareOperatorLevel(TOKEN t1, TOKEN t2) {
 
 FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, size_t end) {
   FuncCallExpr* result = new FuncCallExpr;
-  assert(tokens[begin].token == TOKEN::FN);
-  ++begin;
-  assert(tokens[begin].token == TOKEN::ID);
-  assert(tokens[begin].type == Token::TYPE::STRING);
-  result->func_name_ = tokens[begin].get<std::string>();
-  ++begin;
+  check_token(tokens, begin, TOKEN::FN);
+  result->func_name_ = get_identifier(tokens, begin);
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
   if (begin + 1 != end) {
@@ -132,16 +151,9 @@ FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, 
 
 MethodCallExpr* ParseMethodCallExpr(const std::vector<Token>& tokens, size_t begin, size_t end) {
   MethodCallExpr* result = new MethodCallExpr;
-  assert(tokens[begin].token == TOKEN::ID);
-  assert(tokens[begin].type == Token::TYPE::STRING);
-  result->var_name_ = tokens[begin].get<std::string>();
-  ++begin;
-  assert(tokens[begin].token == TOKEN::DECIMAL_POINT);
-  ++begin;
-  assert(tokens[begin].token == TOKEN::ID);
-  assert(tokens[begin].type == Token::TYPE::STRING);
-  result->method_name_ = tokens[begin].get<std::string>();
-  ++begin;
+  result->var_name_ = get_identifier(tokens, begin);
+  check_token(tokens, begin, TOKEN::DECIMAL_POINT);
+  result->method_name_ = get_identifier(tokens, begin);
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
   if (begin + 1 != end) {
@@ -278,7 +290,7 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
       operands.push(expr);
     }
     else {
-
+      // 首先判断是不是单元操作符
       if (i == begin || IsOperator(tokens[i - 1].token) == true) {
         assert(OperatorSet::instance().FindUnary(current_token) == true);
         unary_operators.push(current_token);
@@ -468,10 +480,8 @@ std::vector<std::pair<std::string, ComprehensiveType>> ParseParameterList(const 
     size_t next = 0;
     ComprehensiveType ct = ParseComprehensiveType(tokens, index, next);
     index = next;
-    assert(tokens[index].token == TOKEN::ID && tokens[index].type == Token::TYPE::STRING);
-    std::string var_name = tokens[index].get<std::string>();
+    std::string var_name = get_identifier(tokens, begin);
     result.push_back({ var_name, ct });
-    ++index;
     assert(tokens[index].token == TOKEN::COMMA || tokens[index].token == TOKEN::RIGHT_PARENTHESIS);
     if (tokens[index].token == TOKEN::COMMA) {
       ++index;
@@ -483,11 +493,8 @@ std::vector<std::pair<std::string, ComprehensiveType>> ParseParameterList(const 
 
 Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   Func result;
-  assert(tokens[begin].token == TOKEN::FUNC);
-  ++begin;
-  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
-  result.func_name_ = tokens[begin].get<std::string>();
-  ++begin;
+  check_token(tokens, begin, TOKEN::FUNC);
+  result.func_name_ = get_identifier(tokens, begin);
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   size_t match_parent = FindMatchedParenthesis(tokens, begin);
   ++begin;
@@ -496,10 +503,8 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 
   begin = match_parent + 1;
 
-  assert(tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
-  result.return_type_.base_type_ = tokens[begin].get<std::string>();
+  result.return_type_.base_type_ = get_type_name(tokens, begin);
   FuncSet::instance().RegisterFunc(result);
-  ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
   result.block_ = ParseFMBlockStmt(tokens, begin, match_brace);
@@ -510,30 +515,18 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 //TODO
 Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   Method result;
-  assert(tokens[begin].token == TOKEN::METHOD);
-  ++begin;
-  assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
-  ++begin;
-  assert(tokens[begin].type == Token::TYPE::STRING);
-  result.type_name_ = tokens[begin].get<std::string>();
-  assert(TypeSet::instance().Find(result.type_name_) == true);
-  ++begin;
-  assert(tokens[begin].token == TOKEN::RIGHT_PARENTHESIS);
-
-  ++begin;
-  //��������
-  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
-  result.method_name_ = tokens[begin].get<std::string>();
-  ++begin;
+  check_token(tokens, begin, TOKEN::METHOD);
+  check_token(tokens, begin, TOKEN::LEFT_PARENTHESIS);
+  result.type_name_ = get_type_name(tokens, begin);
+  check_token(tokens, begin, TOKEN::RIGHT_PARENTHESIS);
+  result.method_name_ = get_identifier(tokens, begin);
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   size_t match_parent = FindMatchedParenthesis(tokens, begin);
   ++begin;
 
   result.parameter_type_list_ = ParseParameterList(tokens, begin, match_parent);
   begin = match_parent + 1;
-
-  result.return_type_.base_type_ = tokens[begin].get<std::string>();
-  ++begin;
+  result.return_type_.base_type_ = get_type_name(tokens, begin);
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
   result.block_ = ParseFMBlockStmt(tokens, begin, match_brace);
@@ -548,12 +541,10 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
 // }
 Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   Type result;
-  assert(tokens[begin].token == TOKEN::TYPE);
-  ++begin;
-  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
-  result.type_name_ = tokens[begin].get<std::string>();
-  ++begin;
-  assert(tokens[begin].token == TOKEN::LEFT_BRACE);
+  check_token(tokens, begin, TOKEN::TYPE);
+  result.type_name_ = get_identifier(tokens, begin);
+  check_token(tokens, begin, TOKEN::LEFT_BRACE);
+  begin -= 1;
   size_t match_brace = FindMatchedBrace(tokens, begin);
 
   end = match_brace;
@@ -565,12 +556,9 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
     size_t next = 0;
     ComprehensiveType ct = ParseComprehensiveType(tokens, begin, next);
     begin = next;
-    assert(tokens[begin].type == Token::TYPE::STRING);
-    std::string var_name = tokens[begin].get<std::string>();
+    std::string var_name = get_identifier(tokens, begin);
     result.RegisterData(var_name, ct);
-    ++begin;
-    assert(tokens[begin].token == TOKEN::SEMICOLON);
-    ++begin;
+    check_token(tokens, begin, TOKEN::SEMICOLON);
   }
   ++end;
   return result;
@@ -581,12 +569,9 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 // type_name var(expr, expr, expr, ...);
 // ����Ƿ���������ݳ�Ա������ƥ�䡣
 VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, size_t begin, size_t& end) {
-  assert(tokens[begin].token == TOKEN::LET);
-  begin += 1;
+  check_token(tokens, begin, TOKEN::LET);
   VariableDefineStmt* result = new VariableDefineStmt;
-  assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
-  result->var_name_ = tokens[begin].get<std::string>();
-  ++begin;
+  result->var_name_ = get_identifier(tokens, begin);
   size_t next = 0;
   result->type_name_ = ParseComprehensiveType(tokens, begin, next);
   begin = next;
@@ -594,7 +579,9 @@ VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, si
     end = begin + 1;
     return result;
   }
-  assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
+  check_token(tokens, begin, TOKEN::ASSIGN);
+  check_token(tokens, begin, TOKEN::LEFT_PARENTHESIS);
+  begin -= 1;
   size_t match_parent = FindMatchedParenthesis(tokens, begin);
   if (begin + 1 != match_parent) {
     while (true) {
@@ -611,8 +598,8 @@ VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, si
     }
   }
   ++begin;
-  assert(tokens[begin].token == TOKEN::SEMICOLON);
-  end = begin + 1;
+  check_token(tokens, begin, TOKEN::SEMICOLON);
+  end = begin;
   return result;
 }
 

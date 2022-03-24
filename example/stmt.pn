@@ -1,5 +1,5 @@
 func main() void {
-  let a int = 4;
+  let a int = (4);
   if(a > 3) {
     fn print("if-else stmt, if block exec.");
   }

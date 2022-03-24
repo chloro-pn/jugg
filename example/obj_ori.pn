@@ -8,7 +8,7 @@ method(Person) GetName() string {
 }
 
 func main() void {
-  Person boy(25, "nanpang");
+  let boy Person = (25, "nanpang");
   fn print(boy.age);
   fn print(boy.GetName());
   return;
