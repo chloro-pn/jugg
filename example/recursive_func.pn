@@ -7,10 +7,10 @@ func Fibonacci(int n) int {
       return 1;
     }
   }
-  return Fibonacci(n - 1) + Fibonacci(n - 2);
+  return fn Fibonacci(n - 1) + fn Fibonacci(n - 2);
 }
 
 func main() void {
-  print("fibonacci 6th(from 0) num is ", Fibonacci(6));
+  print("fibonacci 6th(from 0) num is ", fn Fibonacci(6));
   return;
 }

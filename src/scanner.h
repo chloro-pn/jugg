@@ -29,6 +29,6 @@ class Scanner {
   const std::vector<Token>& Scan(const std::string& filename);
 
  private:
-  explicit Scanner();
+  Scanner();
   std::vector<Token> tokens_;
 };

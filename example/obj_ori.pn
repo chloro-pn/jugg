@@ -9,7 +9,7 @@ method(Person) GetName() string {
 
 func main() void {
   Person boy(25, "nanpang");
-  print(boy.age);
-  print(boy.GetName());
+  fn print(boy.age);
+  fn print(boy.GetName());
   return;
 }

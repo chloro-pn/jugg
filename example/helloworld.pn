@@ -1,6 +1,6 @@
 // 行注释
 // 函数的return语句不能省略。
 func main() void {
-  print("hello world!");
+  fn print("hello world!");
   return;
 }

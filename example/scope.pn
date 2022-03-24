@@ -2,9 +2,9 @@ int a(1);
 
 func main() void {
   if(true) {
-    int a(2);
-    print(a);
+    let a int = (2);
+    fn print(a);
   }
-  print(a);
+  fn print(a);
   return;
 }

@@ -29,7 +29,6 @@ FindMatch(FindMatchedParenthesis, TOKEN::LEFT_PARENTHESIS, TOKEN::RIGHT_PARENTHE
 
 FindMatch(FindMatchedBrace, TOKEN::LEFT_BRACE, TOKEN::RIGHT_BRACE);
 
-//ÒòÎªÒª´¦Àí¿ÕÓï¾ä£¬Òò´Ëbegin±¾Éí¿ÉÄÜ¾ÍÊÇ·ÖºÅ¡£
 #define FindNext(FuncName, x) \
 size_t FuncName(const std::vector<Token>& tokens, size_t begin) { \
   size_t index = begin; \
@@ -46,7 +45,6 @@ FindNext(FindNextSemicolon, TOKEN::SEMICOLON);
 
 FindNext(FindNextComma, TOKEN::COMMA);
 
-// bugĞŞ¸´£¬Ò²Ğí±í´ïÊ½ÖĞÒ²»áÓĞCOMMA·ûºÅ´æÔÚ£¬Ó¦¸ÃÌø¹ı
 size_t FindNextCommaOrEnd(const std::vector<Token>& tokens, size_t begin, size_t end) {
   size_t index = begin;
   size_t count = 1;
@@ -95,7 +93,6 @@ ComprehensiveType ParseComprehensiveType(const std::vector<Token>& tokens, size_
   return result;
 }
 
-//levelÖµÔ½´ó£¬ÓÅÏÈ¼¶Ô½µÍ
 static int CompareOperatorLevel(TOKEN t1, TOKEN t2) {
   if (OperatorSet::instance().GetLevel(t1) > OperatorSet::instance().GetLevel(t2)) {
     return -1;
@@ -108,11 +105,11 @@ static int CompareOperatorLevel(TOKEN t1, TOKEN t2) {
 
 FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, size_t end) {
   FuncCallExpr* result = new FuncCallExpr;
+  assert(tokens[begin].token == TOKEN::FN);
+  ++begin;
   assert(tokens[begin].token == TOKEN::ID);
   assert(tokens[begin].type == Token::TYPE::STRING);
   result->func_name_ = tokens[begin].get<std::string>();
-  //È·±£µ±Ç°º¯Êı¿ÉÒÔ±»ÕÒµ½£¬¼´ÒÑ¾­ÔÚÇ°Ãæ½âÎö¹ı³ÌÖĞ±»¶¨Òå¡£
-  assert(FuncSet::instance().Find(result->func_name_) == true || Interpreter::instance().FindInnerFunc(result->func_name_) == true);
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
@@ -164,36 +161,32 @@ MethodCallExpr* ParseMethodCallExpr(const std::vector<Token>& tokens, size_t beg
   return result;
 }
 
-// endÊÇ±í´ïÊ½×îºóÒ»¸ötokenµÄÏÂÒ»¸ötokenË÷ÒıÖµ¡£
-// TODO : ´¦Àíº¯Êıµ÷ÓÃ±í´ïÊ½ºÍÏÂ±ê·ÃÎÊ±í´ïÊ½£¬³ÉÔ±·ÃÎÊ±í´ïÊ½¡£
+bool IsOperator(const TOKEN& token) {
+  return OperatorSet::instance().Find(token) == true;
+}
+
 Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size_t end) {
   if (begin == end) {
-    return nullptr; // ¿ÉÄÜÊÇ¿ÕÓï¾ä
+    return nullptr;
   }
   std::stack<Expression*> operands;
   std::stack<TOKEN> operators;
   std::stack<TOKEN> unary_operators;
   for (size_t i = begin; i < end; ++i) {
     TOKEN current_token = tokens[i].token;
-    // ×óÀ¨ºÅÌØÊâ´¦Àí£¬ÒòÎªÆä¸Ä±äÁËÔËËãÓÅÏÈ¼¶
     if (current_token == TOKEN::LEFT_PARENTHESIS) {
       size_t match_parent = FindMatchedParenthesis(tokens, i);
-      // µİ¹éÇó½âÀ¨ºÅÖĞµÄ±í´ïÊ½
       operands.push(ParseExpression(tokens, i + 1, match_parent));
       i = match_parent;
       continue;
     }
-    // ËùÓĞµÄÓÒÀ¨ºÅTOKENÓ¦¸Ã±»Ìø¹ı
     assert(current_token != TOKEN::RIGHT_PARENTHESIS);
-    // ²»ÊÇÔËËã·û
-    if (OperatorSet::instance().Find(current_token) == false) {
+    // å¦‚æœä¸æ˜¯æ“ä½œç¬¦
+    if (IsOperator(current_token) == false) {
       Expression* expr = nullptr;
-      //º¯Êıµ÷ÓÃ±í´ïÊ½
-      if (tokens[i].type == Token::TYPE::STRING && (
-        FuncSet::instance().Find(tokens[i].get<std::string>()) == true || 
-        Interpreter::instance().FindInnerFunc(tokens[i].get<std::string>()) == true)) {
-        assert(tokens[i + 1].token == TOKEN::LEFT_PARENTHESIS);
-        size_t match_parent = FindMatchedParenthesis(tokens, i + 1);
+      if (tokens[i].token == TOKEN::FN) {
+        assert(i + 2 < tokens.size() && tokens[i + 2].token == TOKEN::LEFT_PARENTHESIS);
+        size_t match_parent = FindMatchedParenthesis(tokens, i + 2);
         expr = ParseFuncCallExpr(tokens, i, match_parent);
         if (unary_operators.empty() == false) {
           UnaryExpr* tmp = new UnaryExpr;
@@ -204,10 +197,10 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         }
         i = match_parent;
       }
-      //³ÉÔ±·ÃÎÊ±í´ïÊ½
+      // è°ƒç”¨è¡¨è¾¾å¼
       else if (i + 1 < tokens.size() && tokens[i + 1].token == TOKEN::DECIMAL_POINT) {
-        //·½·¨·ÃÎÊ a  .  bcd  ( xxx )...
-        //         i i+1 i+2 i+3
+        //æˆå‘˜å‡½æ•°è¡¨è¾¾å¼ a  .  bcd  ( xxx )...
+        //              i i+1 i+2 i+3
         if (i + 3 < tokens.size() && tokens[i + 3].token == TOKEN::LEFT_PARENTHESIS) {
           size_t match_parent = FindMatchedParenthesis(tokens, i + 3);
           expr = ParseMethodCallExpr(tokens, i, match_parent);
@@ -220,7 +213,7 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
           }
           i = match_parent;
         }
-        //Êı¾İ³ÉÔ±·ÃÎÊ
+        //æ•°æ®æˆå‘˜è¡¨è¾¾å¼
         else {
           DataMemberExpr* dexpr = new DataMemberExpr;
           assert(tokens[i].token == TOKEN::ID);
@@ -269,7 +262,6 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         else {
           assert(tokens[i].token == TOKEN::ID);
           IdExpr* idexpr = new IdExpr;
-          //Í¨¹ıid_name_, type_name_ºÍscope_index_¿ÉÒÔÔÚO(1)Ê±¼äÄÚ¶¨Î»µ½±äÁ¿¡£
           idexpr->id_name_ = tokens[i].get<std::string>();
           expr = idexpr;
         }
@@ -281,23 +273,21 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
           expr = tmp;
         }
       }
-      //·Ç·¨µÄtoken
+      //ä¸åˆæ³•çš„token
       assert(expr != nullptr);
       operands.push(expr);
     }
     else {
-      // ÔËËã·ûÔÚµÚÒ»¸öÎ»ÖÃ»òÕßÇ°Ò»¸öÎ»ÖÃÒ²ÊÇÔËËã·û£¬ÔòÊÇµ¥ÔªÔËËã·û
-      if (i == begin || OperatorSet::instance().Find(tokens[i - 1].token) == true) {
+
+      if (i == begin || IsOperator(tokens[i - 1].token) == true) {
         assert(OperatorSet::instance().FindUnary(current_token) == true);
         unary_operators.push(current_token);
         continue;
       }
-      // Ë«ÔªÔËËã·û²»ÄÜ¿´µ½µ¥ÔªÔËËã·û
       assert(unary_operators.empty() == true);
       while (operators.empty() == false && CompareOperatorLevel(current_token, operators.top()) <= 0) {
-        //ÔËËã, operandsÖĞÖÁÉÙÓĞÁ½¸ö±í´ïÊ½
         BinaryExpr* binexpr = new BinaryExpr;
-        //operatorsÒ»¶¨²»Îª¿Õ
+        assert(operands.size() >= 2);
         binexpr->operator_token_ = operators.top();
         operators.pop();
         binexpr->right_ = operands.top();
@@ -309,10 +299,10 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
       operators.push(current_token);
     }
   }
-  //´¦ÀíÊ£ÓàµÄÔËËã·û
   while (operators.empty() == false) {
     BinaryExpr* binexpr = new BinaryExpr;
     binexpr->operator_token_ = operators.top();
+    assert(operands.size() >= 2);
     operators.pop();
     binexpr->right_ = operands.top();
     operands.pop();
@@ -320,7 +310,6 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
     operands.pop();
     operands.push(binexpr);
   }
-  //×îºóÓ¦¸ÃÖ»Ê£ÏÂÒ»¸ö×Ü±í´ïÊ½.
   assert(operands.size() == 1);
   return operands.top();
 }
@@ -357,7 +346,6 @@ FMBlockStmt* ParseFMBlockStmt(const std::vector<Token>& tokens, size_t begin, si
   return result;
 }
 
-//½âÎö´Óbegin´¦¿ªÊ¼µÄÒ»ÌõÓï¾ä£¬·µ»Ø¸ÃÓï¾ä¶ÔÓ¦µÄ¶ÔÏóÖ¸Õë£¬²¢½«endĞŞ¸ÄÎª¸ÃÓï¾ä×îºóÒ»¸ötokenµÄÏÂÒ»¸ötokenË÷ÒıÖµ¡£
 Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   Statement* result = nullptr;
   if (tokens[begin].token == TOKEN::IF) {
@@ -452,13 +440,11 @@ Statement* ParseStatement(const std::vector<Token>& tokens, size_t begin, size_t
     end = begin + 1;
     return new BreakStmt;
   }
-  else if (tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true) {
-    //±äÁ¿¶¨ÒåÓï¾ä
+  else if (tokens[begin].token == TOKEN::LET) {
     VariableDefineStmt* v = ParseVariableDefinition(tokens, begin, end);
     return v;
   }
   else {
-    // ±í´ïÊ½Óï¾ä, º¯Êıµ÷ÓÃÓï¾äÊÇ±í´ïÊ½Óï¾äµÄÒ»ÖÖ¡£
     ExpressionStmt* tmp = new ExpressionStmt();
     end = FindNextSemicolon(tokens, begin);
     tmp->root_ = ParseExpression(tokens, begin, end);
@@ -495,14 +481,10 @@ std::vector<std::pair<std::string, ComprehensiveType>> ParseParameterList(const 
   return result;
 }
 
-// ¸ù¾İÎ»ÖÃÀ´È·¶¨Ò»¸öid-TOKENÊÇÀàĞÍÃû³Æ¡¢º¯ÊıÃû³Æ»¹ÊÇ±äÁ¿Ãû³Æ.
-// µ±Ò»¸öTOKENÊÇÀàĞÍÃû³Æ»òº¯ÊıÃû³ÆÊ±£¬Í¨¹ıÔÚ±àÒë³ÌĞòÖĞÑ°ÕÒ£¬È·¶¨¾ßÌåµÄÀàĞÍ¡¢º¯Êı¡£
-// µ±Ò»¸öTOKENÊÇ±äÁ¿Ãû³ÆÊ±£¬Í¨¹ı×÷ÓÃÓòÏµÍ³µÄÖ§³Å¶¨Î»±äÁ¿Î»ÖÃ¡£
 Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   Func result;
   assert(tokens[begin].token == TOKEN::FUNC);
   ++begin;
-  //º¯ÊıÃû³Æ
   assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
   result.func_name_ = tokens[begin].get<std::string>();
   ++begin;
@@ -514,15 +496,12 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 
   begin = match_parent + 1;
 
-  //º¯Êı·µ»ØÖµµÄÀàĞÍÔÚÀàĞÍÏµÍ³ÖĞ¿ÉÒÔÕÒµ½¡£
   assert(tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
   result.return_type_.base_type_ = tokens[begin].get<std::string>();
-  //just for test.Ê×ÏÈ½«·ûºÅÒıÈë·ûºÅ±í£¬±ãÓÚºóĞø²éÕÒ¡£
   FuncSet::instance().RegisterFunc(result);
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
-  //º¯ÊıÌå
   result.block_ = ParseFMBlockStmt(tokens, begin, match_brace);
   end = match_brace + 1;
   return result;
@@ -542,7 +521,7 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
   assert(tokens[begin].token == TOKEN::RIGHT_PARENTHESIS);
 
   ++begin;
-  //·½·¨Ãû³Æ
+  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
   result.method_name_ = tokens[begin].get<std::string>();
   ++begin;
@@ -553,8 +532,6 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
   result.parameter_type_list_ = ParseParameterList(tokens, begin, match_parent);
   begin = match_parent + 1;
 
-  //·µ»ØÖµµÄÀàĞÍÔÚÀàĞÍÏµÍ³ÖĞ¿ÉÒÔÕÒµ½¡£
-  assert(tokens[begin].type == Token::TYPE::STRING && TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
   result.return_type_.base_type_ = tokens[begin].get<std::string>();
   ++begin;
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
@@ -564,7 +541,7 @@ Method ParseMethod(const std::vector<Token>& tokens, size_t begin, size_t& end) 
   return result;
 }
 
-// type¶¨Òå£º
+// typeï¿½ï¿½ï¿½å£º
 // type type_name {
 //   int age;
 //   string name;
@@ -600,17 +577,19 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
 }
 
 // TODO:
-// ±äÁ¿¶¨ÒåÓï·¨:
+// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï·¨:
 // type_name var(expr, expr, expr, ...);
-// ¼ì²éÊÇ·ñÓë±äÁ¿Êı¾İ³ÉÔ±µÄÀàĞÍÆ¥Åä¡£
+// ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ³ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¥ï¿½ä¡£
 VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, size_t begin, size_t& end) {
+  assert(tokens[begin].token == TOKEN::LET);
+  begin += 1;
   VariableDefineStmt* result = new VariableDefineStmt;
-  size_t next = 0;
-  result->type_name_ = ParseComprehensiveType(tokens, begin, next);
-  begin = next;
   assert(tokens[begin].token == TOKEN::ID && tokens[begin].type == Token::TYPE::STRING);
   result->var_name_ = tokens[begin].get<std::string>();
   ++begin;
+  size_t next = 0;
+  result->type_name_ = ParseComprehensiveType(tokens, begin, next);
+  begin = next;
   if (tokens[begin].token == TOKEN::SEMICOLON) {
     end = begin + 1;
     return result;

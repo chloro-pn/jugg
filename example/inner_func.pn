@@ -1,8 +1,8 @@
 func main() void {
   // print 可以打印基本类型(见type.pn)
   // len 可以输出字符串类型的长度
-  int strlen;
-  strlen = len("chloro");
-  print(strlen);
+  let strlen int;
+  strlen = fn len("chloro");
+  fn print(strlen);
   return;
 }

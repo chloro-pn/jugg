@@ -1,21 +1,21 @@
 #pragma once
 
 enum class TOKEN {
-  // ¿Õ°×·ûºÅ
-  SPACE, //¿Õ¸ñ
+  // ï¿½Õ°×·ï¿½ï¿½ï¿½
+  SPACE, //ï¿½Õ¸ï¿½
   TAB,  //tab
-  ENTER, //»Ø³µ
-  LINEFEED, //»»ÐÐ
+  ENTER, //ï¿½Ø³ï¿½
+  LINEFEED, //ï¿½ï¿½ï¿½ï¿½
 
-  //»ù±¾Êý¾ÝÀàÐÍ
+  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   INT, //int
   DOUBLE, //double
   BYTE, //byte
-  STRING, //×Ö·û´®
+  STRING, //ï¿½Ö·ï¿½ï¿½ï¿½
   BOOL, //bool
   VOID,
 
-  //Á÷³Ì¿ØÖÆÓï¾ä
+  //ï¿½ï¿½ï¿½Ì¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   IF,
   ELSE,
   WHILE,
@@ -24,7 +24,7 @@ enum class TOKEN {
   CONTINUE,
   RETURN,
 
-  //À¨ºÅ
+  //ï¿½ï¿½ï¿½ï¿½
   LEFT_PARENTHESIS,
   RIGHT_PARENTHESIS,
   LEFT_BRACKETS,
@@ -32,19 +32,19 @@ enum class TOKEN {
   LEFT_BRACE,
   RIGHT_BRACE,
 
-  //·ÖºÅ
+  //ï¿½Öºï¿½
   SEMICOLON,
 
-  //Ã°ºÅ
+  //Ã°ï¿½ï¿½
   COLON,
 
-  //Ð¡Êýµã
+  //Ð¡ï¿½ï¿½ï¿½ï¿½
   DECIMAL_POINT,
 
-  //¶ººÅ
+  //ï¿½ï¿½ï¿½ï¿½
   COMMA,
 
-  //ÔËËã·ûºÅ
+  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   PLUS,
   MINUS,
   MULTIPLY,
@@ -56,7 +56,7 @@ enum class TOKEN {
   COMPARE,
   GREATER_THAN,
   LESS_THAN,
-  //È¡µØÖ·
+  //È¡ï¿½ï¿½Ö·
   ADDRESS_OF,
 
   ID,
@@ -67,15 +67,18 @@ enum class TOKEN {
   FALSE,
   BYTE_ITERAL,
 
-  //º¯Êý
+  //ï¿½ï¿½ï¿½ï¿½
   FUNC,
-  //ÀàÐÍ
+  //ï¿½ï¿½ï¿½ï¿½
   TYPE,
-  //·½·¨
+  //ï¿½ï¿½ï¿½ï¿½
   METHOD,
 
+  FN,
+  LET,
+  
   INVALID,
-  //½áÊø±êÖ¾
+  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾
   TEOF
 };
 

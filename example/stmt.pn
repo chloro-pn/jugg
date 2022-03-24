@@ -1,18 +1,18 @@
 func main() void {
-  int a(4);
+  let a int = 4;
   if(a > 3) {
-    print("if-else stmt, if block exec.");
+    fn print("if-else stmt, if block exec.");
   }
   else {
-    print("if-else stmt, else block exec.");
+    fn print("if-else stmt, else block exec.");
   }
   while(a > 1) {
-    print("while stmt, a = ", a);
+    fn print("while stmt, a = ", a);
     a = a - 1;
   }
-  print("a should be 1 : ", a);
+  fn print("a should be 1 : ", a);
   for(a = 10; a > 1; a = a - 1) {
-    print("for stmt, a = ", a);
+    fn print("for stmt, a = ", a);
   }
   return;
 }
