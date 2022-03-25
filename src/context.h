@@ -38,12 +38,12 @@ public:
     assert(FuncSet::instance().Find(func_name_) == true);
   }
 
+  // 鍙傛暟鍒楄〃鍜屽嚱鏁板０鏄庢牎楠岋紝鍖归厤
   void InitVars(const std::vector<Variable*>& vars) override {
     Func& func = FuncSet::instance().Get(func_name_);
     assert(func.parameter_type_list_.size() == vars.size());
     for (size_t i = 0; i < vars.size(); ++i) {
       assert(func.parameter_type_list_[i].second == vars[i]->type_name_);
-      //注意应该使用函数参数的名字。
       vars[i]->id_name_ = func.parameter_type_list_[i].first;
       RegisterVariable(vars[i]);
     }
@@ -76,7 +76,7 @@ public:
     assert(method.parameter_type_list_.size() == vars.size());
     for (size_t i = 0; i < vars.size(); ++i) {
       assert(method.parameter_type_list_[i].second == vars[i]->type_name_);
-      //注意应该使用函数参数的名字。
+      //注锟斤拷应锟斤拷使锟矫猴拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟街★拷
       vars[i]->id_name_ = method.parameter_type_list_[i].first;
       RegisterVariable(vars[i]);
     }

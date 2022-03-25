@@ -52,7 +52,6 @@ static void inner_len(inner_func_context* fc) {
   fc->return_var_ = v;
 }
 
-//初始情况下在全局作用域。
 Interpreter::Interpreter() {
   global_context_ = new BlockContext(Context::Type::Global);
   inner_func_["print"] = inner_print;
@@ -70,7 +69,7 @@ Variable* Interpreter::FindVariableByName(const std::string& name) {
         return v;
       }
       else {
-        //全局变量中查找
+        //全锟街憋拷锟斤拷锟叫诧拷锟斤拷
         return global_context_->GetVariableByName(name);
       }
     }
@@ -98,7 +97,6 @@ Variable** Interpreter::GetReturnVar() {
 }
 
 void Interpreter::Exec() {
-  //全局变量的构造
   for (auto& each : global_var_) {
     Variable* v = CreateVariable(each->type_name_);
     v->id_name_ = each->var_name_;
@@ -110,17 +108,14 @@ void Interpreter::Exec() {
   assert(v->type_name_.base_type_ == "void");
   Variable::HandleLife(v);
   assert(context_.size() == 0);
-  //全局变量的析构
   global_context_->Clean();
   delete global_context_;
 }
 
-// variables已经是函数作用域内的变量
 Variable* Interpreter::CallFunc(const std::string& func_name, const std::vector<Variable*>& variables) {
   if (inner_func_.find(func_name) != inner_func_.end()) {
     inner_func_context* ifc = new inner_func_context;
     ifc->func_name = func_name;
-    //main函数没有参数传入
     ifc->vars_ = variables;
     inner_func_[func_name](ifc);
     for (auto& each : ifc->vars_) {

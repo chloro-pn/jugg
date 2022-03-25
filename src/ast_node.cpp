@@ -56,12 +56,12 @@ Variable* BinaryExpr::GetVariable() {
   Variable* v2 = right_->GetVariable();
   assert(v1 != nullptr && v2 != nullptr);
   Variable* result = nullptr;
-  // Èç¹ûÊÇ»ù±¾ÀàĞÍ
+  // ï¿½ï¿½ï¿½ï¿½Ç»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
   if (v1->type_name_.IsBaseType() == true && v2->type_name_.IsBaseType() == true) {
     result = OperatorSet::instance().HandleBinary(operator_token_, v1, v2);
   }
   else {
-    // ·ñÔòÊÇÖ¸ÕëÀàĞÍ
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     assert(v1->type_name_.IsPtrType() && v1->type_name_ == v2->type_name_);
     result = OperatorSet::instance().HandlePtr(operator_token_, v1, v2);
   }
@@ -219,9 +219,10 @@ Statement::State WhileStmt::exec() {
 }
 
 Statement::State ReturnStmt::exec() {
+  // è·å–å½“å‰ä¸Šä¸‹æ–‡çš„å­˜å‚¨return_varçš„ä½ç½®
   Variable** return_var_ = Interpreter::instance().GetReturnVar();
   assert(return_var_ != nullptr);
-  //Èç¹ûreturn_var_ÊÇ¿ÕÖ¸Õë£¬ÔòreturnÓï¾äÊÇ¿ÕÓï¾ä¡£
+  // å¦‚æœreturnè¡¨è¾¾å¼ä¸ä¸ºç©º
   if (return_exp_ != nullptr) {
     Variable* tmp = return_exp_->GetVariable();
     assert(tmp != nullptr);
@@ -233,6 +234,7 @@ Statement::State ReturnStmt::exec() {
     }
   }
   else {
+    // return è¡¨è¾¾å¼ä¸ºç©ºï¼Œå¡«å……Voidç±»å‹çš„å¯¹è±¡
     *return_var_ = new VoidVariable;
     (*return_var_)->type_name_.base_type_ = "void";
     (*return_var_)->id_name_ = "tmp";
@@ -249,11 +251,9 @@ Statement::State ExpressionStmt::exec() {
 }
 
 Statement::State VariableDefineStmt::exec() {
-  //½âÊÍÆ÷ÔÚµ±Ç°ÉÏÏÂÎÄ¶¨Òå±äÁ¿
   Variable* v = CreateVariable(type_name_);
   v->type_name_ = type_name_;
   v->id_name_ = var_name_;
-  //ÏÔÊ½¶¨ÒåµÄ±äÁ¿¶¼ÊÇ×óÖµ¡£
   v->ConstructByExpression(constructors_, Variable::Category::Lvalue);
   Interpreter::instance().GetCurrentContext()->RegisterVariable(v);
   return State::Next;

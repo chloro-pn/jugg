@@ -564,10 +564,7 @@ Type ParseType(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   return result;
 }
 
-// TODO:
-// ���������﷨:
-// type_name var(expr, expr, expr, ...);
-// ����Ƿ���������ݳ�Ա������ƥ�䡣
+// let var_name type = ( expr, ...);
 VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   check_token(tokens, begin, TOKEN::LET);
   VariableDefineStmt* result = new VariableDefineStmt;

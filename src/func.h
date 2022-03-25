@@ -34,7 +34,7 @@ class FuncSet {
   }
 
   void RegisterFunc(const Func& func) {
-    //assert(Find(func.func_name_) == false);
+    assert(Find(func.func_name_) == false);
     Set(func.func_name_, func);
   }
 

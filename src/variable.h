@@ -7,7 +7,9 @@ class Expression;
 
 class Variable {
 public:
+  // æ¯ä¸ªå˜é‡éƒ½å…·æœ‰ä¸€ä¸ªç±»å‹
   ComprehensiveType type_name_;
+  // å˜é‡åå­—
   std::string id_name_;
   enum class Category { Lvalue, Rvalue };
   Category cate_;
@@ -26,18 +28,18 @@ public:
     return !IsLValue();
   }
 
-  // Í¨¹ıÒ»×é±í´ïÊ½¹¹Ôì±äÁ¿£¬ÔÚµ÷ÓÃ¸Ãº¯ÊıÇ°±äÁ¿µÄtype_name_ºÍid_name_Ó¦¸ÃÒÑ¾­±»ÉèÖÃ¡£
-  // Èç¹û±í´ïÊ½Îª¿Õ£¬Ôòµ÷ÓÃÄ¬ÈÏ¹¹Ôì½Ó¿ÚDefaultConstruct.
+  // é€šè¿‡ä¸€ç»„è¡¨è¾¾å¼æ„å»ºå˜é‡ï¼Œåœ¨è°ƒç”¨æœ¬å‡½æ•°å‰type_name_å’Œid_name_åº”è¯¥å·²ç»è¢«è®¾ç½®
+  // å¦‚æœè¡¨è¾¾å¼ä¸ºç©ºï¼Œåˆ™è°ƒç”¨é»˜è®¤æ„é€ æ¥å£DefaultConstruct
   virtual void ConstructByExpression(const std::vector<Expression*>& constructors, Variable::Category cate) = 0;
-  // Ä¬ÈÏ¹¹Ôì±äÁ¿£¬ÔÚµ÷ÓÃ¸Ãº¯ÊıÖ®Ç°±äÁ¿µÄtype_name_ºÍid_name_Ó¦¸ÃÒÑ¾­±»ÉèÖÃ¡£
+  // é»˜è®¤æ„é€ å˜é‡ï¼Œè°ƒç”¨æœ¬å‡½æ•°å‰type_name_å’Œid_name_åº”è¯¥å·²ç»è¢«è®¾ç½®
   virtual void DefaultConstruct(Variable::Category cate) = 0;
-  // Í¨¹ıÒÑÓĞ±äÁ¿¸´ÖÆÒ»¸öĞÂµÄ±äÁ¿£¬¼Ì³Ğtype_name_ºÍid_nameÒÔ¼°value£¬cate_ÓÉ²ÎÊıÖ¸¶¨¡£
+  // å˜é‡å¤åˆ¶æ“ä½œï¼Œç»§æ‰¿type_nameå’Œid_nameï¼Œcateç”±å‚æ•°æŒ‡å®š
   virtual Variable* Copy(Variable::Category cate) = 0;
-  // ĞŞ¸Ä±äÁ¿µÄcate_Îª²ÎÊıÖ¸¶¨
+  // ä¿®æ”¹category
   virtual void ChangeCategory(Variable::Category cate) = 0;
-  // ¸³Öµ²Ù×÷£¬²»¸Ä±äid_name_ºÍcate_£¬±ØĞëÔÚÏàÍ¬ÀàĞÍµÄ±äÁ¿¼ä½øĞĞ¡£
+  // èµ‹å€¼æ“ä½œ
   virtual void Assign(Variable* v) = 0;
-  // ¸ù¾İ±äÁ¿Ãû³Æ²éÑ¯Êı¾İ³ÉÔ±£¬Èç¹ûÃ»ÕÒµ½»òÕß²»´æÔÚÔò·µ»Ønullptr¡£
+  // æ ¹æ®åç§°æŸ¥æ‰¾æ•°æ®æˆå‘˜
   virtual Variable* FindMember(const std::string& name) = 0;
   virtual ~Variable() {
 
