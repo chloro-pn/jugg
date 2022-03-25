@@ -6,6 +6,11 @@ Variable* CreateVariable(const ComprehensiveType& type_name) {
   if (type_name.IsBaseType() == false) {
     assert(false);
   }
+  if (type_name.type_ == ComprehensiveType::TYPE::ARRAY) {
+    auto result = new ArrayVariable;
+    result->ele_num_ = type_name.array_num_;
+    return result;
+  }
   if (type_name.IsBaseType("string")) {
     return new StringVariable;
   }
@@ -35,13 +40,14 @@ void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs,
   for (size_t index = 0; index < cs.size(); ++index) {
     Variable* v = cs[index]->GetVariable();
     assert(v != nullptr && v->type_name_ == type.GetNthDataMemberType(index));
-    v->id_name_ = type.GetNthDataMemberName(index);
     if (v->IsLValue()) {
       Variable* tmp = v->Copy(cate);
+      tmp->id_name_ = type.GetNthDataMemberName(index);
       members_.push_back(tmp);
     }
     else {
       v->ChangeCategory(cate);
+      v->id_name_ = type.GetNthDataMemberName(index);
       members_.push_back(v);
     }
   }
@@ -101,6 +107,80 @@ AbstractVariable::~AbstractVariable() {
     delete each;
   }
 }
+
+void ArrayVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
+  if (cs.size() == 0) {
+    DefaultConstruct(cate);
+    return;
+  }
+  assert(type_name_.IsBaseType());
+  assert(ele_num_ == cs.size());
+  for (size_t index = 0; index < cs.size(); ++index) {
+    Variable* v = cs[index]->GetVariable();
+    assert(v != nullptr && v->type_name_ == type_name_);
+    if (v->IsLValue()) {
+      Variable* tmp = v->Copy(cate);
+      tmp->id_name_ = "tmp";
+      members_.push_back(tmp);
+    }
+    else {
+      v->ChangeCategory(cate);
+      v->id_name_ = "tmp";
+      members_.push_back(v);
+    }
+  }
+  cate_ = cate;
+}
+
+void ArrayVariable::DefaultConstruct(Variable::Category cate) {
+  cate_ = cate;
+  assert(type_name_.IsBaseType());
+  size_t count = ele_num_;
+  for (size_t i = 0; i < count; ++i) {
+    Variable* v = CreateVariable(type_name_);
+    v->type_name_ = type_name_;
+    v->id_name_ = "tmp";
+    v->DefaultConstruct(cate);
+    members_.push_back(v);
+  }
+}
+
+Variable* ArrayVariable::Copy(Variable::Category cate) {
+  ArrayVariable* result = new ArrayVariable;
+  result->type_name_ = type_name_;
+  result->id_name_ = id_name_;
+  result->cate_ = cate;
+  for (auto& each : members_) {
+    result->members_.push_back(each->Copy(cate));
+  }
+  return result;
+}
+
+void ArrayVariable::ChangeCategory(Variable::Category cate) {
+  cate_ = cate;
+  for (auto& each : members_) {
+    each->ChangeCategory(cate);
+  }
+}
+
+void ArrayVariable::Assign(Variable* v) {
+  assert(type_name_ == v->type_name_);
+  for (size_t i = 0; i < members_.size(); ++i) {
+    // todo 增强类型检测
+    members_[i]->Assign(static_cast<ArrayVariable*>(v)->members_[i]);
+  }
+}
+
+Variable* ArrayVariable::FindMember(const std::string& name) {
+  return nullptr;
+}
+
+ArrayVariable::~ArrayVariable() {
+  for (auto& each : members_) {
+    delete each;
+  }
+}
+
 
 void StringVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
   if (cs.size() == 0) {

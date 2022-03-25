@@ -1,4 +1,4 @@
 func main() void {
-    let a int = (2);
+    let a int = (new:int(2));
     return;
 }

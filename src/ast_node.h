@@ -74,6 +74,15 @@ class IdExpr : public Expression {
   Variable* GetVariable() override;
 };
 
+// 索引表达式
+class IndexExpr : public Expression {
+ public:
+  std::string id_name_;
+  int64_t index_;
+
+  Variable* GetVariable() override;
+};
+
 // 字符串字面量表达式
 class StringIteralExpr : public Expression {
  public:

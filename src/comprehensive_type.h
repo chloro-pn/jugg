@@ -2,10 +2,13 @@
 #include <string>
 #include <vector>
 
-// 重构，目前仅考虑F1类型
 class ComprehensiveType {
 public:
   std::string base_type_;
+
+  enum class TYPE {SCALE, ARRAY};
+  TYPE type_;
+  size_t array_num_;
 
   ComprehensiveType() = default;
   ComprehensiveType(const ComprehensiveType&) = default;

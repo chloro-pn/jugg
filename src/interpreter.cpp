@@ -73,7 +73,6 @@ Variable* Interpreter::FindVariableByName(const std::string& name) {
         return v;
       }
       else {
-        //ȫ�ֱ����в���
         return global_context_->GetVariableByName(name);
       }
     }

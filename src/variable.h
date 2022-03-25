@@ -15,7 +15,7 @@ public:
   Category cate_;
 
   static void HandleLife(Variable* v) {
-    if (v->IsRValue()) {
+    if (v != nullptr && v->IsRValue()) {
       delete v;
     }
   }
@@ -67,6 +67,25 @@ public:
   void Assign(Variable*) override;
   Variable* FindMember(const std::string& name) override;
   ~AbstractVariable();
+};
+
+class ArrayVariable : public Variable {
+public:
+  size_t ele_num_;
+  std::vector<Variable*> members_;
+
+  Variable* At(size_t num) {
+    assert(members_.size() > num);
+    return members_[num];
+  }
+
+  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
+  void DefaultConstruct(Variable::Category cate) override;
+  Variable* Copy(Variable::Category cate) override;
+  void ChangeCategory(Variable::Category cate) override;
+  void Assign(Variable*) override;
+  Variable* FindMember(const std::string& name) override;
+  ~ArrayVariable();
 };
 
 class StringVariable : public Variable {

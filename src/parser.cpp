@@ -97,7 +97,19 @@ ComprehensiveType ParseComprehensiveType(const std::vector<Token>& tokens, size_
   assert(TypeSet::instance().Find(tokens[begin].get<std::string>()) == true);
   ComprehensiveType result;
   result.base_type_ = tokens[begin].get<std::string>();
+  result.type_ = ComprehensiveType::TYPE::SCALE;
   ++begin;
+  if (begin < tokens.size() && tokens[begin].token == TOKEN::LEFT_BRACKETS) {
+    begin += 1;
+    assert(begin < tokens.size() && tokens[begin].token == TOKEN::INT_ITERAL);
+    int64_t num = tokens[begin].get<int64_t>();
+    assert(num > 0);
+    begin += 1;
+    assert(begin < tokens.size() && tokens[begin].token == TOKEN::RIGHT_BRACKETS);
+    begin += 1;
+    result.type_ = ComprehensiveType::TYPE::ARRAY;
+    result.array_num_ = num;
+  }
   end = begin;
   return result;
 }
@@ -135,11 +147,9 @@ FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, 
   return result;
 }
 
-NewVarExpr* ParseNewVarExpr(const std::vector<Token>& tokens, size_t begin, size_t end) {
+NewVarExpr* ParseNewVarExpr(const std::vector<Token>& tokens, size_t begin, size_t end, ComprehensiveType type) {
   NewVarExpr* result = new NewVarExpr;
-  check_token(tokens, begin, TOKEN::NEW);
-  check_token(tokens, begin, TOKEN::COLON);
-  result->type_name_.base_type_ = get_type_name(tokens, begin);
+  result->type_name_ = type;
   assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
   assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
   if (begin + 1 != end) {
@@ -219,9 +229,11 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
       // new表达式
       else if (tokens[i].token == TOKEN::NEW) {
         assert(i + 3 < tokens.size() && tokens[i + 1].token == TOKEN::COLON);
-        assert(tokens[i + 3].token == TOKEN::LEFT_PARENTHESIS);
-        size_t match_parent = FindMatchedParenthesis(tokens, i + 3);
-        expr = ParseNewVarExpr(tokens, i, match_parent);
+        size_t next = 0;
+        ComprehensiveType type =  ParseComprehensiveType(tokens, i + 2, next);
+        assert(tokens[next].token == TOKEN::LEFT_PARENTHESIS);
+        size_t match_parent = FindMatchedParenthesis(tokens, next);
+        expr = ParseNewVarExpr(tokens, next, match_parent, type);
         if (unary_operators.empty() == false) {
           UnaryExpr* tmp = new UnaryExpr;
           tmp->child_ = expr;
@@ -295,9 +307,21 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         }
         else {
           assert(tokens[i].token == TOKEN::ID);
-          IdExpr* idexpr = new IdExpr;
-          idexpr->id_name_ = tokens[i].get<std::string>();
-          expr = idexpr;
+          if (i + 1 < tokens.size() && tokens[i + 1].token == TOKEN::LEFT_BRACKETS) {
+            assert(i + 2 < tokens.size() && tokens[i + 2].token == TOKEN::INT_ITERAL);
+            int64_t index = tokens[i + 2].get<int64_t>();
+            assert(i + 3 < tokens.size() && tokens[i + 3].token == TOKEN::RIGHT_BRACKETS);
+            IndexExpr* indexexpr = new IndexExpr;
+            indexexpr->id_name_ = tokens[i].get<std::string>();
+            assert(index >= 0);
+            indexexpr->index_ = index;
+            expr = indexexpr;
+            i = i + 3;
+          } else {
+            IdExpr* idexpr = new IdExpr;
+            idexpr->id_name_ = tokens[i].get<std::string>();
+            expr = idexpr;
+          }
         }
         if (unary_operators.empty() == false) {
           UnaryExpr* tmp = new UnaryExpr;

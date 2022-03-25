@@ -83,6 +83,13 @@ Variable* IdExpr::GetVariable() {
   return Interpreter::instance().FindVariableByName(id_name_);
 }
 
+Variable* IndexExpr::GetVariable() {
+  Variable* v = Interpreter::instance().FindVariableByName(id_name_);
+  // todo 增强类型检测能力，这里直接转换了
+  auto tmp = VariableCast<ArrayVariable>(v);
+  return tmp->At(index_);
+}
+
 Variable* StringIteralExpr::GetVariable() {
   StringVariable* v = new StringVariable;
   v->type_name_.base_type_ = "string";
