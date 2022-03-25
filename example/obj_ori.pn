@@ -7,9 +7,41 @@ method(Person) GetName() string {
   return name;
 }
 
+// 目前的实现，即使返回值是void，return;语句也不能省略
+method(Person) UpdateInfo(int new_age, string new_name) void {
+  if (new_age > 30) {
+    new_name = "old_" + name;
+  }
+  age = new_age;
+  name = new_name;
+  return;
+}
+
+method(Person) print() void {
+  fn print("begin print person obj : ");
+  fn print(age);
+  fn print(name);
+  return;
+}
+
+// 嵌套类型
+type ID_CARD {
+  Person persion;
+  int id;
+}
+
 func main() void {
-  let boy Person = (25, "nanpang");
-  fn print(boy.age);
-  fn print(boy.GetName());
+  let boy Person = (25, "bob");
+  boy.print();
+
+  boy.UpdateInfo(23, "liming");
+  boy.print();
+
+  boy.UpdateInfo(33, "han");
+  // 只要对应的类型实现了print方法，则可以通过内置的print函数直接调用，因此fn print(boy); 等价于boy.print();
+  fn print(boy);
+  // 支持new表达式，创建一个对应类型的右值对象
+  let id ID_CARD = (new:Person(23, "alice"), 430084);
+  fn print(id.id);
   return;
 }

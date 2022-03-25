@@ -58,12 +58,8 @@ class OperatorSet {
     return uoperators_[token].func_(v);
   }
 
-  Variable* HandlePtr(const TOKEN& token, Variable* v1, Variable* v2) {
-    return pointer_operators_[token](v1, v2);
-  }
-
   bool Find(const TOKEN& token) {
-    return FindBinary(token) || FindUnary(token) || FindPtr(token);
+    return FindBinary(token) || FindUnary(token);
   }
 
   bool FindBinary(const TOKEN& token) {
@@ -76,14 +72,8 @@ class OperatorSet {
     return it != uoperators_.end();
   }
 
-  bool FindPtr(const TOKEN& token) {
-    auto it = pointer_operators_.find(token);
-    return it != pointer_operators_.end();
-  }
-
  private:
   OperatorSet();
   std::unordered_map<TOKEN, BinaryOperator> boperators_;
   std::unordered_map<TOKEN, UnaryOperator> uoperators_;
-  std::unordered_map<TOKEN, std::function<Variable*(Variable*,Variable*)>> pointer_operators_;
 };

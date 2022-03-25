@@ -76,6 +76,7 @@ enum class TOKEN {
 
   FN,
   LET,
+  NEW,
   
   INVALID,
   //������־

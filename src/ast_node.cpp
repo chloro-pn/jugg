@@ -1,11 +1,20 @@
-#include "ast_node.h"
-#include <iostream>
 #include <cstdlib>
 #include <vector>
 #include <string>
+
+#include "ast_node.h"
 #include "operator.h"
 #include "variable.h"
 #include "interpreter.h"
+
+// new表达式创建的都是右值对象
+Variable* NewVarExpr::GetVariable() {
+  Variable* result = CreateVariable(type_name_);
+  result->type_name_.base_type_ = type_name_.base_type_;
+  result->id_name_ = "tmp";
+  result->ConstructByExpression(parameters_, Variable::Category::Rvalue);
+  return result;
+}
 
 Variable* FuncCallExpr::GetVariable() {
   std::vector<Variable*> vars;
@@ -56,15 +65,7 @@ Variable* BinaryExpr::GetVariable() {
   Variable* v2 = right_->GetVariable();
   assert(v1 != nullptr && v2 != nullptr);
   Variable* result = nullptr;
-  // ����ǻ�������
-  if (v1->type_name_.IsBaseType() == true && v2->type_name_.IsBaseType() == true) {
-    result = OperatorSet::instance().HandleBinary(operator_token_, v1, v2);
-  }
-  else {
-    // ������ָ������
-    assert(v1->type_name_.IsPtrType() && v1->type_name_ == v2->type_name_);
-    result = OperatorSet::instance().HandlePtr(operator_token_, v1, v2);
-  }
+  result = OperatorSet::instance().HandleBinary(operator_token_, v1, v2);
   Variable::HandleLife(v1);
   Variable::HandleLife(v2);
   return result;

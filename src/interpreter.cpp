@@ -35,7 +35,11 @@ static void inner_print(inner_func_context* fc) {
       std::cout << VariableCast<ByteVariable>(each)->val_;
     }
     else {
-      assert(false);
+      assert(fc->vars_.size() == 1);
+      // 如果是自定义类型，则调用对应的print方法
+      Variable* result = Interpreter::instance().CallMethod(fc->vars_[0], "print", {});
+      assert(result->type_name_.base_type_ == "void");
+      Variable::HandleLife(result);
     }
   }
   std::cout << std::endl;
@@ -84,6 +88,7 @@ Variable* Interpreter::FindVariableByName(const std::string& name) {
   return global_context_->GetVariableByName(name);
 }
 
+// 堆栈中找到最近的func or method 上下文对象，如果不存在返回false。
 Variable** Interpreter::GetReturnVar() {
   std::stack<Context*> c = context_;
   while (c.empty() == false) {

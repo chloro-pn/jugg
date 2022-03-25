@@ -71,6 +71,7 @@ public:
   }
 
   Type& Get(const std::string& type_name) {
+    assert(Find(type_name) == true);
     return types_[type_name];
   }
 

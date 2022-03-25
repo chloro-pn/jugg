@@ -1,8 +1,8 @@
 CXX := g++
-INCLUDE_PATH := -I .
+INCLUDE_PATH := -I ./src
 CXXFLAGS := -Wall -std=c++17 -g
 
-SRCS := $(wildcard *.cpp)
+SRCS := $(wildcard src/*.cpp)
 OBJS := $(SRCS:.cpp=.o)
 DEPS := $(SRCS:.cpp=.d)
 

@@ -4,20 +4,26 @@
 #include "token.h"
 #include "comprehensive_type.h"
 class Variable;
-
-// ÀàAstNodeÊÇ³éÏóÓï·¨Ê÷½ÚµãµÄ»ùÀà¡£
 class AstNode {
  public:
   virtual ~AstNode() = default;
 };
 
-// ±í´ïÊ½Àà
+// æ‰€æœ‰è¡¨è¾¾å¼å¯¹è±¡çš„åŸºç±»
 class Expression : public AstNode {
  public:
   virtual Variable* GetVariable() = 0;
 };
 
-// º¯Êıµ÷ÓÃ±í´ïÊ½
+// new:type_name(expr, ..)
+class NewVarExpr : public Expression {
+ public:
+  ComprehensiveType type_name_;
+  std::vector<Expression*> parameters_;
+  virtual Variable* GetVariable() override;
+};
+
+// fn func_name(param_list)
 class FuncCallExpr : public Expression {
  public:
   std::string func_name_;
@@ -25,7 +31,7 @@ class FuncCallExpr : public Expression {
   virtual Variable* GetVariable() override;
 };
 
-// ·½·¨µ÷ÓÃ±í´ïÊ½
+// obj.method_name(param_list)
 class MethodCallExpr : public Expression {
  public:
   std::string var_name_;
@@ -34,7 +40,7 @@ class MethodCallExpr : public Expression {
   virtual Variable* GetVariable() override;
 };
 
-// Êı¾İ³ÉÔ±·ÃÎÊ±í´ïÊ½
+// boj.data_member
 class DataMemberExpr : public Expression {
  public:
   std::string var_name_;
@@ -42,7 +48,7 @@ class DataMemberExpr : public Expression {
   virtual Variable* GetVariable() override;
 };
 
-// ¶şÔªÔËËã·û
+// äºŒå…ƒè¿ç®—
 class BinaryExpr : public Expression {
  public:
   Expression* left_;
@@ -51,7 +57,7 @@ class BinaryExpr : public Expression {
   Variable* GetVariable() override;
 };
 
-// µ¥ÔªÔËËã·û
+// å•å…ƒè¿ç®—
 class UnaryExpr : public Expression {
  public:
   Expression* child_;
@@ -60,7 +66,7 @@ class UnaryExpr : public Expression {
   Variable* GetVariable() override;
 };
 
-// id±í´ïÊ½
+// æ ‡è¯†ç¬¦è¡¨è¾¾å¼
 class IdExpr : public Expression {
  public:
   std::string id_name_;
@@ -68,7 +74,7 @@ class IdExpr : public Expression {
   Variable* GetVariable() override;
 };
 
-// ×Ö·û´®×ÖÃæÁ¿±í´ïÊ½
+// å­—ç¬¦ä¸²å­—é¢é‡è¡¨è¾¾å¼
 class StringIteralExpr : public Expression {
  public:
   std::string str_;
@@ -76,7 +82,7 @@ class StringIteralExpr : public Expression {
   Variable* GetVariable() override;
 };
 
-// ÕûĞÎ±í´ïÊ½
+// æ•´å½¢å­—é¢é‡è¡¨è¾¾å¼
 class IntIteralExpr : public Expression {
  public:
   int64_t int_;
@@ -84,7 +90,7 @@ class IntIteralExpr : public Expression {
   Variable* GetVariable() override;
 };
 
-// ¸¡µãĞÍ±í´ïÊ½
+// æµ®ç‚¹å‹å­—é¢é‡è¡¨è¾¾å¼
 class DoubleIteralExpr : public Expression {
  public:
   double d_;
@@ -92,7 +98,7 @@ class DoubleIteralExpr : public Expression {
   virtual Variable* GetVariable() override;
 };
 
-// ²¼¶ûĞÍ±í´ïÊ½
+// å¸ƒå°”å‹å­—é¢é‡è¡¨è¾¾å¼
 class BoolIteralExpr : public Expression {
  public:
   bool b_;
@@ -100,7 +106,7 @@ class BoolIteralExpr : public Expression {
   virtual Variable* GetVariable() override;
 };
 
-// ×Ö½ÚĞÍ±í´ïÊ½
+// byteå‹å­—é¢é‡è¡¨è¾¾å¼
 class ByteIteralExpr : public Expression {
  public:
   uint8_t c_;
@@ -108,16 +114,13 @@ class ByteIteralExpr : public Expression {
   virtual Variable* GetVariable() override;
 };
 
-// Óï¾ä, Ã¿¸öÓï¾ä¶¼¿ÉÒÔ±»Ö´ĞĞ(exec)£¬²¢¾ßÓĞ·µ»ØÖµ¡£
-// Õâ¸ö·µ»ØÖµ¶ÔÓïÑÔÊ¹ÓÃÕß²»¿É¼û£¬Ö÷ÒªÊÇÎªÁËÊµÏÖbreak, returnºÍcontinueµÈ
-// ¹æÔò¡£
+// æ‰€æœ‰è¯­å¥çš„åŸºç±»ï¼ŒåŒ…æ‹¬å—è¯­å¥ã€æµç¨‹æ§åˆ¶è¯­å¥ã€å‡½æ•°/æ–¹æ³•è°ƒç”¨è¯­å¥ã€å˜é‡å®šä¹‰è¯­å¥
 class Statement : public AstNode {
 public:
   enum class State { Continue, Break, Next, Return };
   virtual State exec() = 0;
 };
 
-// ¿éÓï¾ä
 class BlockStmt : public Statement {
  public:
   std::vector<Statement*> block_;
@@ -125,14 +128,11 @@ class BlockStmt : public Statement {
   State exec() override;
 };
 
-// º¯Êı/·½·¨Óï¾ä£¬²»Ê¹ÓÃ¿éÓï¾äµÄÔ­ÒòÊÇº¯Êı/·½·¨ÉÏÏÂÎÄµÄ½øÈëÓÉµ÷ÓÃÕß¿ØÖÆ£¬Òò´Ë
-// execÖĞ²»½øĞĞÉÏÏÂÎÄµÄ¼ÇÂ¼¡£
 class FMBlockStmt : public BlockStmt {
  public:
   State exec() override;
 };
 
-// forÓï¾ä
 class ForStmt : public Statement {
  public:
   Expression* init_;
@@ -143,7 +143,6 @@ class ForStmt : public Statement {
   State exec() override;
 };
 
-// ifÓï¾ä
 class IfStmt : public Statement {
  public:
   Expression* check_;
@@ -153,7 +152,6 @@ class IfStmt : public Statement {
   State exec() override;
 };
 
-// whileÓï¾ä
 class WhileStmt : public Statement {
  public:
   Expression* check_;
@@ -183,7 +181,6 @@ class ReturnStmt : public Statement {
   State exec() override;
 };
 
-// ±í´ïÊ½Óï¾ä
 class ExpressionStmt : public Statement {
  public:
   Expression* root_;
@@ -191,7 +188,6 @@ class ExpressionStmt : public Statement {
   State exec() override;
 };
 
-// ±äÁ¿¶¨ÒåÓï¾ä
 class VariableDefineStmt : public Statement {
  public:
   ComprehensiveType type_name_;

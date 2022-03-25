@@ -129,18 +129,6 @@ public:
   ~ByteVariable();
 };
 
-class PointerVariable : public Variable {
-public:
-  Variable* ptr_;
-  void ConstructByExpression(const std::vector<Expression*>&, Variable::Category cate) override;
-  void DefaultConstruct(Variable::Category cate) override;
-  Variable* Copy(Variable::Category cate) override;
-  void ChangeCategory(Variable::Category cate) override;
-  void Assign(Variable*) override;
-  Variable* FindMember(const std::string& name) override;
-  ~PointerVariable();
-};
-
 Variable* CreateVariable(const ComprehensiveType& type_name);
 
 template<typename T>

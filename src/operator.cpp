@@ -364,47 +364,9 @@ static void register_builtin_uoperators(std::unordered_map<TOKEN, UnaryOperator>
     return result;
   };
   os[TOKEN::NOT] = n;
-
-  UnaryOperator deref;
-  deref.token_ = TOKEN::MULTIPLY;
-  deref.func_ = [](Variable* v)->Variable* {
-    assert(v->type_name_.modifiers_.empty() == false);
-    assert(v->type_name_.modifiers_.back() == ComprehensiveType::Modifier::Pointer);
-    return static_cast<PointerVariable*>(v)->ptr_;
-  };
-  os[TOKEN::MULTIPLY] = deref;
-
-  UnaryOperator addressof;
-  addressof.token_ = TOKEN::ADDRESS_OF;
-  addressof.func_ = [](Variable* v)->Variable* {
-    PointerVariable* result = new PointerVariable;
-    result->cate_ = Variable::Category::Rvalue;
-    result->id_name_ = "tmp";
-    result->ptr_ = v;
-    result->type_name_ = v->type_name_;
-    result->type_name_.modifiers_.push_back(ComprehensiveType::Modifier::Pointer);
-    return result;
-  };
-  os[TOKEN::ADDRESS_OF] = addressof;
-}
-
-static void register_builtin_poperators(std::unordered_map<TOKEN, std::function<Variable*(Variable*, Variable*)>>& os) {
-  os[TOKEN::ASSIGN] = [](Variable* v1, Variable* v2)->Variable* {
-    v1->Assign(v2);
-    return v1;
-  };
-  os[TOKEN::COMPARE] = [](Variable* v1, Variable* v2)->Variable* {
-    BoolVariable* result = new BoolVariable;
-    result->type_name_.base_type_ = "bool";
-    result->id_name_ = "tmp";
-    result->val_ = static_cast<PointerVariable*>(v1)->ptr_ == static_cast<PointerVariable*>(v2)->ptr_;
-    result->cate_ = Variable::Category::Rvalue;
-    return result;
-  };
 }
 
 OperatorSet::OperatorSet() {
   register_builtin_operators(boperators_);
   register_builtin_uoperators(uoperators_);
-  register_builtin_poperators(pointer_operators_);
 }

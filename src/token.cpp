@@ -99,6 +99,12 @@ const char* GetTokenStr(TOKEN token) {
     return "method";
   case TOKEN::ID:
     return "id";
+  case TOKEN::LET:
+    return "let";
+  case TOKEN::FN:
+    return "fn";
+  case TOKEN::NEW:
+    return "new";
   case TOKEN::TEOF:
     return "teof";
   default:

@@ -2,6 +2,7 @@
 #include "func.h"
 #include "operator.h"
 #include "interpreter.h"
+
 #include <cassert>
 #include <algorithm>
 
@@ -97,21 +98,6 @@ ComprehensiveType ParseComprehensiveType(const std::vector<Token>& tokens, size_
   ComprehensiveType result;
   result.base_type_ = tokens[begin].get<std::string>();
   ++begin;
-  while (true) {
-    if (tokens[begin].token == TOKEN::MULTIPLY) {
-      result.modifiers_.push_back(ComprehensiveType::Modifier::Pointer);
-      ++begin;
-      continue;
-    }
-    else if (tokens[begin].token == TOKEN::LEFT_BRACKETS) {
-      ++begin;
-      assert(tokens[begin].token == TOKEN::RIGHT_BRACKETS);
-      ++begin;
-      result.modifiers_.push_back(ComprehensiveType::Modifier::Array);
-      continue;
-    }
-    break;
-  }
   end = begin;
   return result;
 }
@@ -142,6 +128,27 @@ FuncCallExpr* ParseFuncCallExpr(const std::vector<Token>& tokens, size_t begin, 
       // func_name(xxxxx, xxxxx, xxxx)
       //           |    |
       //         begin end
+      result->parameters_.push_back(ParseExpression(tokens, begin, next));
+      begin = next;
+    }
+  }
+  return result;
+}
+
+NewVarExpr* ParseNewVarExpr(const std::vector<Token>& tokens, size_t begin, size_t end) {
+  NewVarExpr* result = new NewVarExpr;
+  check_token(tokens, begin, TOKEN::NEW);
+  check_token(tokens, begin, TOKEN::COLON);
+  result->type_name_.base_type_ = get_type_name(tokens, begin);
+  assert(tokens[begin].token == TOKEN::LEFT_PARENTHESIS);
+  assert(tokens[end].token == TOKEN::RIGHT_PARENTHESIS);
+  if (begin + 1 != end) {
+    while (true) {
+      if (begin == end) {
+        break;
+      }
+      ++begin;
+      size_t next = FindNextCommaOrEnd(tokens, begin, end);
       result->parameters_.push_back(ParseExpression(tokens, begin, next));
       begin = next;
     }
@@ -200,6 +207,21 @@ Expression* ParseExpression(const std::vector<Token>& tokens, size_t begin, size
         assert(i + 2 < tokens.size() && tokens[i + 2].token == TOKEN::LEFT_PARENTHESIS);
         size_t match_parent = FindMatchedParenthesis(tokens, i + 2);
         expr = ParseFuncCallExpr(tokens, i, match_parent);
+        if (unary_operators.empty() == false) {
+          UnaryExpr* tmp = new UnaryExpr;
+          tmp->child_ = expr;
+          tmp->operator_token_ = unary_operators.top();
+          unary_operators.pop();
+          expr = tmp;
+        }
+        i = match_parent;
+      }
+      // new表达式
+      else if (tokens[i].token == TOKEN::NEW) {
+        assert(i + 3 < tokens.size() && tokens[i + 1].token == TOKEN::COLON);
+        assert(tokens[i + 3].token == TOKEN::LEFT_PARENTHESIS);
+        size_t match_parent = FindMatchedParenthesis(tokens, i + 3);
+        expr = ParseNewVarExpr(tokens, i, match_parent);
         if (unary_operators.empty() == false) {
           UnaryExpr* tmp = new UnaryExpr;
           tmp->child_ = expr;
@@ -480,7 +502,7 @@ std::vector<std::pair<std::string, ComprehensiveType>> ParseParameterList(const 
     size_t next = 0;
     ComprehensiveType ct = ParseComprehensiveType(tokens, index, next);
     index = next;
-    std::string var_name = get_identifier(tokens, begin);
+    std::string var_name = get_identifier(tokens, index);
     result.push_back({ var_name, ct });
     assert(tokens[index].token == TOKEN::COMMA || tokens[index].token == TOKEN::RIGHT_PARENTHESIS);
     if (tokens[index].token == TOKEN::COMMA) {
@@ -504,9 +526,9 @@ Func ParseFunc(const std::vector<Token>& tokens, size_t begin, size_t& end) {
   begin = match_parent + 1;
 
   result.return_type_.base_type_ = get_type_name(tokens, begin);
-  FuncSet::instance().RegisterFunc(result);
   assert(tokens[begin].token == TOKEN::LEFT_BRACE);
   size_t match_brace = FindMatchedBrace(tokens, begin);
+  // 由于要支持函数递归，因此在解析函数体的时候就需要能看到本函数
   result.block_ = ParseFMBlockStmt(tokens, begin, match_brace);
   end = match_brace + 1;
   return result;

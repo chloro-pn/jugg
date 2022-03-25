@@ -1,10 +1,12 @@
 // 支持原始函数，格式如下
 
-func add(int x, int y) int {
-  return x + y;
+func add(int a, int b) int {
+  return a + b;
 }
 
 func main() void {
-  fn print(fn add(2, 3));
+  let a int = (2);
+  let b int = (3);
+  fn print(fn add(a, b));
   return;
 }

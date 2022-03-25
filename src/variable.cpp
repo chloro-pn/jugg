@@ -4,13 +4,7 @@
 
 Variable* CreateVariable(const ComprehensiveType& type_name) {
   if (type_name.IsBaseType() == false) {
-    if (type_name.modifiers_.back() == ComprehensiveType::Modifier::Pointer) {
-      return new PointerVariable;
-    }
-    else {
-      //暂且不考虑
-      assert(false);
-    }
+    assert(false);
   }
   if (type_name.IsBaseType("string")) {
     return new StringVariable;
@@ -30,7 +24,6 @@ Variable* CreateVariable(const ComprehensiveType& type_name) {
   return new AbstractVariable;
 }
 
-//type_name_和id_name_已经被设置
 void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
   if (cs.size() == 0) {
     DefaultConstruct(cate);
@@ -55,7 +48,6 @@ void AbstractVariable::ConstructByExpression(const std::vector<Expression*>& cs,
   cate_ = cate;
 }
 
-//type_name和id_name应该已经被设置
 void AbstractVariable::DefaultConstruct(Variable::Category cate) {
   cate_ = cate;
   assert(type_name_.IsBaseType());
@@ -327,50 +319,5 @@ Variable* ByteVariable::FindMember(const std::string& name) {
 }
 
 ByteVariable::~ByteVariable() {
-  ;
-}
-
-void PointerVariable::ConstructByExpression(const std::vector<Expression*>& cs, Variable::Category cate) {
-  if (cs.size() == 0) {
-    DefaultConstruct(cate);
-    return;
-  }
-  assert(cs.size() == 1);
-  Variable* v = cs[0]->GetVariable();
-  assert(v != nullptr && v->type_name_ == type_name_);
-  Assign(v);
-  cate_ = cate;
-  Variable::HandleLife(v);
-}
-
-void PointerVariable::DefaultConstruct(Variable::Category cate) {
-  cate_ = cate;
-  ptr_ = nullptr;
-}
-
-Variable* PointerVariable::Copy(Variable::Category cate) {
-  PointerVariable* result = new PointerVariable;
-  result->type_name_ = type_name_;
-  result->id_name_ = id_name_;
-  result->cate_ = cate;
-  result->ptr_ = ptr_;
-  return result;
-}
-
-// 指针本身的左右值与指向的变量无关
-void PointerVariable::ChangeCategory(Variable::Category cate) {
-  cate_ = cate;
-}
-
-void PointerVariable::Assign(Variable* v) {
-  assert(type_name_ == v->type_name_);
-  ptr_ = VariableCast<PointerVariable>(v)->ptr_;
-}
-
-Variable* PointerVariable::FindMember(const std::string& name) {
-  return nullptr;
-}
-
-PointerVariable::~PointerVariable() {
   ;
 }
