@@ -162,6 +162,7 @@ static void register_builtin_assign_operators(BinaryOperator& op) {
   op.op_funcs_[{"string", "string"}] = assign_func;
   op.op_funcs_[{"bool", "bool"}] = assign_func;
   op.op_funcs_[{"byte", "byte"}] = assign_func;
+  op.op_funcs_[{"default", "default"}] =  assign_func;
 }
 
 static Variable* compare_int_int(Variable* v1, Variable* v2) {

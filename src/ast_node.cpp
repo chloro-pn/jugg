@@ -259,10 +259,21 @@ Statement::State ExpressionStmt::exec() {
 }
 
 Statement::State VariableDefineStmt::exec() {
-  Variable* v = CreateVariable(type_name_);
-  v->type_name_ = type_name_;
-  v->id_name_ = var_name_;
-  v->ConstructByExpression(constructors_, Variable::Category::Lvalue);
+  Variable* v = nullptr;
+  if (type_ == TYPE::DIRECT) {
+    v = CreateVariable(type_name_);
+    v->type_name_ = type_name_;
+    v->id_name_ = var_name_;
+    v->ConstructByExpression(constructors_, Variable::Category::Lvalue);
+  } else {
+    assert(constructors_.size() == 1);
+    Variable* tmp = constructors_[0]->GetVariable();
+    assert(tmp->type_name_ == type_name_);
+    v = tmp->Copy(Variable::Category::Lvalue);
+    v->type_name_ = type_name_;
+    v->id_name_ = var_name_;
+    Variable::HandleLife(tmp);
+  }
   Interpreter::instance().GetCurrentContext()->RegisterVariable(v);
   return State::Next;
 }

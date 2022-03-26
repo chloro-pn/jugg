@@ -22,8 +22,10 @@ struct BinaryOperator {
   }
 
   Variable* Handle(Variable* v1, Variable* v2) {
-    assert(FindOpFuncs(v1->type_name_.base_type_, v2->type_name_.base_type_));
-    return op_funcs_[{v1->type_name_.base_type_, v2->type_name_.base_type_}](v1, v2);
+    if(FindOpFuncs(v1->type_name_.base_type_, v2->type_name_.base_type_)) {
+      return op_funcs_[{v1->type_name_.base_type_, v2->type_name_.base_type_}](v1, v2);
+    }
+    return op_funcs_[{"default", "default"}](v1, v2);
   }
 
   bool FindOpFuncs(const std::string& t1, const std::string& t2) const {

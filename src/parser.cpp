@@ -623,24 +623,35 @@ VariableDefineStmt* ParseVariableDefinition(const std::vector<Token>& tokens, si
     return result;
   }
   check_token(tokens, begin, TOKEN::ASSIGN);
-  check_token(tokens, begin, TOKEN::LEFT_PARENTHESIS);
-  begin -= 1;
-  size_t match_parent = FindMatchedParenthesis(tokens, begin);
-  if (begin + 1 != match_parent) {
-    while (true) {
-      if (begin == match_parent) {
-        break;
+  if (tokens[begin].token != TOKEN::LEFT_PARENTHESIS) {
+    // =右边不是左括号的话，为拷贝构造表达式
+    size_t next = FindNextSemicolon(tokens, begin);
+    Expression* expr = ParseExpression(tokens, begin, next);
+    begin = next;
+    result->constructors_.push_back(expr);
+    result->type_ = VariableDefineStmt::TYPE::COPY;
+  } else {
+    check_token(tokens, begin, TOKEN::LEFT_PARENTHESIS);
+    result->type_ = VariableDefineStmt::TYPE::DIRECT;
+    // =右边是左括号，为直接构造表达式
+    begin -= 1;
+    size_t match_parent = FindMatchedParenthesis(tokens, begin);
+    if (begin + 1 != match_parent) {
+      while (true) {
+        if (begin == match_parent) {
+          break;
+        }
+        ++begin;
+        size_t next = FindNextCommaOrEnd(tokens, begin, match_parent);
+        // variable_name(xxxxx, xxxxx, xxxx)
+        //           |    |
+        //         begin end
+        result->constructors_.push_back(ParseExpression(tokens, begin, next));
+        begin = next;
       }
-      ++begin;
-      size_t next = FindNextCommaOrEnd(tokens, begin, match_parent);
-      // variable_name(xxxxx, xxxxx, xxxx)
-      //           |    |
-      //         begin end
-      result->constructors_.push_back(ParseExpression(tokens, begin, next));
-      begin = next;
     }
+    ++begin;
   }
-  ++begin;
   check_token(tokens, begin, TOKEN::SEMICOLON);
   end = begin;
   return result;

@@ -34,6 +34,8 @@ func main() void {
   let boy Person = (25, "bob");
   boy.print();
 
+  let boy2 Person = boy;
+
   boy.UpdateInfo(23, "liming");
   boy.print();
 
@@ -43,5 +45,10 @@ func main() void {
   // 支持new表达式，创建一个对应类型的右值对象
   let id ID_CARD = (new:Person(23, "alice"), 430084);
   fn print(id.id);
+
+  let ids ID_CARD[2] = (new:ID_CARD(new:Person(22, "bob"), 10010), new:ID_CARD(new:Person(23, "alice"), 10011));
+  // todo 支持任意复合类型的赋值运算，支持构造时的赋值语法（=右边不带括号时认为是复制构造）
+  let tmp ID_CARD = ids[0];
+  fn print(tmp.id);
   return;
 }

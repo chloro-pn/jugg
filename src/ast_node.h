@@ -199,6 +199,8 @@ class ExpressionStmt : public Statement {
 
 class VariableDefineStmt : public Statement {
  public:
+  enum class TYPE {DIRECT, COPY};
+  TYPE type_;
   ComprehensiveType type_name_;
   std::string var_name_;
   std::vector<Expression*> constructors_;
