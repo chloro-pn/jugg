@@ -1,21 +1,21 @@
 #pragma once
 
 enum class TOKEN {
-  // �հ׷���
-  SPACE, //�ո�
-  TAB,  //tab
-  ENTER, //�س�
-  LINEFEED, //����
+  // 空白符
+  SPACE,
+  TAB,
+  ENTER,
+  LINEFEED,
 
-  //������������
-  INT, //int
-  DOUBLE, //double
-  BYTE, //byte
-  STRING, //�ַ���
-  BOOL, //bool
+  // 内置类型
+  INT,
+  DOUBLE,
+  BYTE,
+  STRING,
+  BOOL,
   VOID,
 
-  //���̿������
+  // 流程控制
   IF,
   ELSE,
   WHILE,
@@ -24,7 +24,7 @@ enum class TOKEN {
   CONTINUE,
   RETURN,
 
-  //����
+  // 括号
   LEFT_PARENTHESIS,
   RIGHT_PARENTHESIS,
   LEFT_BRACKETS,
@@ -32,19 +32,14 @@ enum class TOKEN {
   LEFT_BRACE,
   RIGHT_BRACE,
 
-  //�ֺ�
   SEMICOLON,
 
-  //ð��
   COLON,
 
-  //С����
   DECIMAL_POINT,
 
-  //����
   COMMA,
 
-  //�������
   PLUS,
   MINUS,
   MULTIPLY,
@@ -56,7 +51,6 @@ enum class TOKEN {
   COMPARE,
   GREATER_THAN,
   LESS_THAN,
-  //ȡ��ַ
   ADDRESS_OF,
 
   ID,
@@ -67,11 +61,8 @@ enum class TOKEN {
   FALSE,
   BYTE_ITERAL,
 
-  //����
   FUNC,
-  //����
   TYPE,
-  //����
   METHOD,
 
   FN,
@@ -79,7 +70,6 @@ enum class TOKEN {
   NEW,
   
   INVALID,
-  //������־
   TEOF
 };
 
